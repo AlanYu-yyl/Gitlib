@@ -13,21 +13,27 @@
     <artifactId>server</artifactId>
     <version>1.0.0</version>
 
+    <properties>
+        <com.zaxxer.HikariCP.version>3.2.0</com.zaxxer.HikariCP.version>
+        <mysql.mysql-connector-java.version>8.0.18</mysql.mysql-connector-java.version>
+        <commons-dbutils.commons-dbutils.version>1.6</commons-dbutils.commons-dbutils.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>3.2.0</version>
+            <version>${com.zaxxer.HikariCP.version}</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.18</version>
+            <version>${mysql.mysql-connector-java.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-dbutils</groupId>
             <artifactId>commons-dbutils</artifactId>
-            <version>1.6</version>
+            <version>${commons-dbutils.commons-dbutils.version}</version>
         </dependency>
     </dependencies>
 

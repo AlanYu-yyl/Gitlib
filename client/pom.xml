@@ -9,6 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <properties>
+        <com.humility.server.server.version>1.0.0</com.humility.server.server.version>
+    </properties>
+
     <groupId>com.humility.client</groupId>
     <artifactId>client</artifactId>
     <version>1.0.0</version>
@@ -17,7 +21,7 @@
         <dependency>
             <groupId>com.humility.server</groupId>
             <artifactId>server</artifactId>
-            <version>1.0.0</version>
+            <version>${com.humility.server.server.version}</version>
         </dependency>
     </dependencies>
 
