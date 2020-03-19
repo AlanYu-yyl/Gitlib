@@ -81,7 +81,7 @@ public class Server {
      * 获取数据库连接池.
      * @return
      */
-    public static DataSource getDataSource() {
+    static DataSource getDataSource() {
         return dataSource;
     }
 

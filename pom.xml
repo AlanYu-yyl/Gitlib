@@ -19,10 +19,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>13</maven.compiler.source>
+        <maven.compiler.target>13</maven.compiler.target>
         <github.global.server>github</github.global.server>
-        <java.version>8</java.version>
+        <java.version>13</java.version>
         <org.slf4j.version>1.7.30</org.slf4j.version>
         <org.junit.jupiter.version>5.5.2</org.junit.jupiter.version>
         <org.projectlombok.version>1.18.12</org.projectlombok.version>
