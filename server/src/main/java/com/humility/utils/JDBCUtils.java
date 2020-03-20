@@ -24,7 +24,7 @@ public class JDBCUtils {
         log.info("Inserting a user.");
         String sql = "INSERT INTO users(username, password, realname, phoneNumber, emailAddress, qqAccount) VALUES (?, ?, ?, ?, ?, ?)";
         Object[] params = {user.getUsername(), user.getPassword(), user.getRealname(), user.getPhoneNumber(), user.getEmailAddress(), user.getQqAccount()};
-        try (Connection con = Server.getDataSource().getConnection()) {
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
             line = queryRunner.update(con, sql, params);
         } catch (SQLException e) {
             log.error("数据库更新失败");
@@ -38,7 +38,7 @@ public class JDBCUtils {
         log.info("Checking the account info.");
         String sql = "SELECT * FROM users WHERE username=? AND password=?";
         Object[] objects = null;
-        try (Connection con = Server.getDataSource().getConnection()) {
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
             objects = queryRunner.query(con, sql, new ArrayHandler(), account.getUsername(), account.getPassword());
             if (objects.length > 0) {
                 ret = new User();

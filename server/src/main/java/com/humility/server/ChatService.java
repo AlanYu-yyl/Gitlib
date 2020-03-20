@@ -11,7 +11,7 @@ public interface ChatService {
     /**
      * 客户端用来接收信息的方法.
      * @param userId 接受者的用户id用于map到对应的socket上
-     * @return
+     * @return 返回自己收到的消息.
      */
     public String getMessage(Integer userId);
 
@@ -20,7 +20,7 @@ public interface ChatService {
      * @param message 发送的信息
      * @param senderId 消息的发送者id
      * @param getterId 消息的接受者id
-     * @return
+     * @return 无返回值
      */
-    public Boolean sendMessage(String message, Integer senderId, Integer getterId);
+    public void sendMessage(String message, Integer senderId, Integer getterId);
 }

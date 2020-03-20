@@ -7,11 +7,14 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public String getMessage(Integer userId) {
+
         return null;
     }
 
     @Override
-    public Boolean sendMessage(String message, Integer senderId, Integer getterId) {
-        return null;
+    public void sendMessage(String message, Integer senderId, Integer getterId) {
+
+
+        return;
     }
 }

@@ -1,6 +1,8 @@
 package com.humility.server;
 
 import com.humility.datas.KeepAlive;
+import com.humility.server.objectHandler.KeepAliveHandler;
+import com.humility.server.objectHandler.ObjectHandler;
 import com.humility.utils.JDBCUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -28,37 +30,6 @@ import java.util.concurrent.*;
 @Slf4j
 public class Server {
 
-    //默认线程数量.
-    public static final int DEFAULT_THREAD_MIN_NUM = 5;
-    public static final int DEFAULT_THREAD_MAX_NUM = 15;
-
-     //简单的单例模式,类持有自己惟一的静态实例.
-    private static Server server;
-
-    //数据库连接池.
-    private static DataSource dataSource = null;
-
-    //线程池.
-    private static ExecutorService threadPool = null;
-
-    //封装数据库处理.
-    static final JDBCUtils jdbcUtils = new JDBCUtils();
-
-    //客户端在线列表.(使用tcp长连接维护)通过userId映射到对应的socket长连接.
-    private Map<Socket, Long> clientStatus = new HashMap<>();
-
-    //将接收到的对象映射到处理对象上.
-    private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();
-
-    //接受对象的处理对象们.
-    private KeepAliveHandler keepAliveHandler = null;
-
-    //端口号
-    public static final int PORT = 50000;
-
-    //维持长连接的端口.
-    private ServerSocket serverSocket = null;
-
     /**
      * 单例模式,用于获取服务器唯一实例.
      * @return
@@ -81,26 +52,8 @@ public class Server {
      * 获取数据库连接池.
      * @return
      */
-    static DataSource getDataSource() {
+    public DataSource getDataSource() {
         return dataSource;
-    }
-
-    void addOnlineUserStatus(Socket socket, Long timeMillis) {
-        clientStatus.put(socket, timeMillis);
-        log.info("A new user online.");
-    }
-
-    void addActionMap(Class<? extends Object> clas, ObjectHandler handler) {
-        actionMapping.put(clas, handler);
-    }
-
-    void setOnlineUserStatus(Socket socket, Long timeMillis) {
-        long lastReceiveTime = clientStatus.get(socket);
-        if (clientStatus.get(socket) != null) {
-            clientStatus.replace(socket, lastReceiveTime, timeMillis);
-        } else {
-            addOnlineUserStatus(socket, timeMillis);
-        }
     }
 
     /**
@@ -135,61 +88,7 @@ public class Server {
      * @param args  命令行参数.
      */
     public static void main(String[] args) {
-        Server.getServer();
-        Server.getServer().addObjectHandler();
-        UserService userService = new UserServiceImpl();
-        threadPool.submit(() -> server.register(userService, UserServiceImpl.PORT));
-        ChatService chatService = new ChatServiceImpl();
-        threadPool.submit(() -> server.register(chatService,ChatServiceImpl.PORT));
-        GoodService goodService = new GoodServiceImpl();
-        threadPool.submit(() -> server.register(goodService,GoodServiceImpl.PORT));
-        TransactionService transactionService = new TransactionServiceImpl();
-        threadPool.submit(() -> server.register(transactionService, TransactionServiceImpl.PORT));
-        //开一个线程检查客户端的活跃性.
-        threadPool.submit(() -> Server.getServer().handleLongCon());
-    }
-
-    /**
-     * 私有构造器,防止外部创建server实例.
-     */
-    private Server() {
-        log.debug("Initializing...");
-        log.debug("Creating the server...");
-        log.debug("Bending the Service...");
-        try {
-            serverSocket = new ServerSocket(PORT);
-        } catch (IOException e) {
-            String info = "The port: " + PORT + " might have been bended.";
-            log.error(info);
-            throw new RuntimeException(info, e);
-        }
-        this.threadPool = new ThreadPoolExecutor(
-                DEFAULT_THREAD_MIN_NUM,
-                DEFAULT_THREAD_MAX_NUM,
-                60L,
-                TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>());
-        log.debug("Success to get the threadPool!");
-        log.debug("Trying to get the dbcp...");
-        HikariConfig config = new HikariConfig();
-        //TODO 记得更换相应路径.
-        String fileName = "D:\\Programme\\workspace\\java\\idea\\curriculum-design\\server\\src\\main\\resources\\dbcp.properties";
-        Properties dbcpConfig = null;
-        try (FileReader fr = new FileReader(fileName)) {
-            dbcpConfig = new Properties();
-            dbcpConfig.load(fr);
-        } catch (FileNotFoundException fnfe) {
-            String info = "Cannot find the configFile: " + fileName;
-            log.error(info);
-            throw new RuntimeException(info, fnfe);
-        } catch (IOException ioe) {
-            String info = "Fail to load the dbcp config.";
-            log.error(info);
-            throw new RuntimeException(info ,ioe);
-        }
-        getDBCPConfig(config, dbcpConfig);
-        dataSource = new HikariDataSource(config);
-        log.debug("Success to get the dataSource");
+        Server.getServer().start();
     }
 
     /**
@@ -245,20 +144,36 @@ public class Server {
         }
     }
 
-    /**
-     * 封装数据库连接池属性的读取.
-     * 将具体配置读取到配置对象之中.
-     * @param config        配置对象
-     * @param dbcpConfig    具体配置
-     */
-    private void getDBCPConfig(HikariConfig config, Properties dbcpConfig) {
-        config.setDriverClassName(dbcpConfig.getProperty("driver"));
-        config.setJdbcUrl(dbcpConfig.getProperty("url"));
-        config.setUsername(dbcpConfig.getProperty("username"));
-        config.setPassword(dbcpConfig.getProperty("password"));
-        config.addDataSourceProperty("connectionTimeout", dbcpConfig.getProperty("connectionTimeout"));
-        config.addDataSourceProperty("idleTimeout", dbcpConfig.getProperty("idleTimeout"));
-        config.addDataSourceProperty("maximumPoolSize", dbcpConfig.getProperty("maximumPoolSize"));
+    void addOnlineUserStatus(Socket socket, Long timeMillis) {
+        clientStatus.put(socket, timeMillis);
+        log.info("A new user online.");
+    }
+
+    void addActionMap(Class<? extends Object> clas, ObjectHandler handler) {
+        actionMapping.put(clas, handler);
+    }
+
+    void setOnlineUserStatus(Socket socket, Long timeMillis) {
+        long lastReceiveTime = clientStatus.get(socket);
+        if (clientStatus.get(socket) != null) {
+            clientStatus.replace(socket, lastReceiveTime, timeMillis);
+        } else {
+            addOnlineUserStatus(socket, timeMillis);
+        }
+    }
+
+    public void start() {
+        server.addObjectHandler();
+        UserService userService = new UserServiceImpl();
+        threadPool.submit(() -> server.register(userService, UserServiceImpl.PORT));
+        ChatService chatService = new ChatServiceImpl();
+        threadPool.submit(() -> server.register(chatService,ChatServiceImpl.PORT));
+        GoodService goodService = new GoodServiceImpl();
+        threadPool.submit(() -> server.register(goodService,GoodServiceImpl.PORT));
+        TransactionService transactionService = new TransactionServiceImpl();
+        threadPool.submit(() -> server.register(transactionService, TransactionServiceImpl.PORT));
+        //开一个线程检查客户端的活跃性.
+        threadPool.submit(() -> Server.getServer().handleLongCon());
     }
 
     void handleLongCon() {
@@ -277,6 +192,11 @@ public class Server {
         }
     }
 
+    void addIdMapper(Integer id, Socket socket) {
+        idMapper.put(id, socket);
+        log.info("get a IdMapper!!!");
+    }
+
     class SocketChecker implements Runnable {
         Socket socket = null;
 
@@ -293,8 +213,14 @@ public class Server {
                         ObjectInputStream ois = new ObjectInputStream(in);
                         Object obj = ois.readObject();
                         setOnlineUserStatus(socket, System.currentTimeMillis());
-                        ObjectHandler oh = actionMapping.get(obj.getClass());
-                        Object out = oh.handleObject(obj);
+                        Class objClass = obj.getClass();
+                        Object out = null;
+                        if (objClass.equals(Integer.class)) {
+                            addIdMapper((Integer)obj, socket);
+                        } else {
+                            ObjectHandler oh = actionMapping.get(objClass);
+                            out = oh.handleObject(obj);
+                        }
                         if (out != null) {
                             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                             oos.writeObject(out);
@@ -302,7 +228,7 @@ public class Server {
                         }
                     } else {
                         try {
-                            Thread.sleep(5000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                             log.error("Fail to stop the thread.");
                         }
@@ -321,6 +247,37 @@ public class Server {
         }
     }
 
+    //默认线程数量.
+    public static final int DEFAULT_THREAD_MIN_NUM = 5;
+    public static final int DEFAULT_THREAD_MAX_NUM = 15;
+
+    //端口号
+    public static final int PORT = 50010;
+
+     //简单的单例模式,类持有自己惟一的静态实例.
+    private static Server server;
+
+    //数据库连接池.
+    private DataSource dataSource = null;
+
+    //线程池.
+    private ExecutorService threadPool = null;
+
+    //封装数据库处理.
+    static JDBCUtils jdbcUtils = new JDBCUtils();
+
+    //客户端在线列表.(使用tcp长连接维护)通过userId映射到对应的socket长连接.
+    private Map<Socket, Long> clientStatus = new HashMap<>();
+
+    //用户id映射,把用户id映射成对应的socket连接
+    private Map<Integer, Socket> idMapper = new HashMap<>();
+
+    //将接收到的对象映射到处理对象上.
+    private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();
+
+    //维持长连接的端口.
+    private ServerSocket serverSocket = null;
+
     void closeTheSocket(Socket socket) {
         if (socket != null) {
             try{
@@ -333,8 +290,66 @@ public class Server {
 
     void addObjectHandler() {
         log.debug("Adding objectHandler...");
-        keepAliveHandler = new KeepAliveHandler();
-        addActionMap(KeepAlive.class, keepAliveHandler);
+        addActionMap(KeepAlive.class, new KeepAliveHandler());
         log.debug("Success!");
+    }
+
+    /**
+     * 封装数据库连接池属性的读取.
+     * 将具体配置读取到配置对象之中.
+     * @param config        配置对象
+     * @param dbcpConfig    具体配置
+     */
+    private void getDBCPConfig(HikariConfig config, Properties dbcpConfig) {
+        config.setDriverClassName(dbcpConfig.getProperty("driver"));
+        config.setJdbcUrl(dbcpConfig.getProperty("url"));
+        config.setUsername(dbcpConfig.getProperty("username"));
+        config.setPassword(dbcpConfig.getProperty("password"));
+        config.addDataSourceProperty("connectionTimeout", dbcpConfig.getProperty("connectionTimeout"));
+        config.addDataSourceProperty("idleTimeout", dbcpConfig.getProperty("idleTimeout"));
+        config.addDataSourceProperty("maximumPoolSize", dbcpConfig.getProperty("maximumPoolSize"));
+    }
+
+    /**
+     * 私有构造器,防止外部创建server实例.
+     */
+    private Server() {
+        log.debug("Initializing...");
+        log.debug("Creating the server...");
+        log.debug("Bending the Service...");
+        try {
+            serverSocket = new ServerSocket(PORT);
+        } catch (IOException e) {
+            String info = "The port: " + PORT + " might have been bended.";
+            log.error(info);
+            throw new RuntimeException(info, e);
+        }
+        this.threadPool = new ThreadPoolExecutor(
+                DEFAULT_THREAD_MIN_NUM,
+                DEFAULT_THREAD_MAX_NUM,
+                60L,
+                TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>());
+        log.debug("Success to get the threadPool!");
+        log.debug("Trying to get the dbcp...");
+        HikariConfig config = new HikariConfig();
+        //TODO 记得更换相应路径.
+        String fileName = "D:\\Programme\\workspace\\java\\idea\\curriculum-design\\server\\src\\main\\resources\\dbcp.properties";
+        Properties dbcpConfig = null;
+        try (FileReader fr = new FileReader(fileName)) {
+            dbcpConfig = new Properties();
+            dbcpConfig.load(fr);
+        } catch (FileNotFoundException fnfe) {
+            String info = "Cannot find the configFile: " + fileName;
+            log.error(info);
+            throw new RuntimeException(info, fnfe);
+        } catch (IOException ioe) {
+            String info = "Fail to load the dbcp config.";
+            log.error(info);
+            throw new RuntimeException(info ,ioe);
+        }
+        getDBCPConfig(config, dbcpConfig);
+        dataSource = new HikariDataSource(config);
+        log.debug("Success to get the dataSource");
     }
 }

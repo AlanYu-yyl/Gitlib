@@ -15,7 +15,7 @@ import java.awt.event.ActionListener;
  * 创建时间 2020年3月7日00:15:00
  */
 @Slf4j
-public class LoginInterface implements ActionListener {
+public class LoginGUI implements ActionListener {
 
     //持有需要监听器处理的对象
     private JTextField username = null;
@@ -25,13 +25,13 @@ public class LoginInterface implements ActionListener {
     private JFrame jf = null;
 
     //持有自己的私有静态对象,用于监听按钮.
-    private static LoginInterface loginInterface = new LoginInterface();
+    private static LoginGUI loginGUI = new LoginGUI();
 
     /**
      * 获取自己唯一实例的公开接口.
      */
-    public static LoginInterface getLoginInterface() {
-        return loginInterface;
+    public static LoginGUI getLoginGUI() {
+        return loginGUI;
     }
     /**
      * 创建登录和注册的gui界面.
@@ -51,8 +51,8 @@ public class LoginInterface implements ActionListener {
         password = new JPasswordField(10);
         login = new JButton("登录");
         register = new JButton("注册");
-        login.addActionListener(loginInterface);
-        register.addActionListener(loginInterface);
+        login.addActionListener(loginGUI);
+        register.addActionListener(loginGUI);
 
         panel1.add(inputUsername);
         panel2.add(inputPassword);
@@ -79,32 +79,20 @@ public class LoginInterface implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == login) {
-            User me = Client.getClient().userService.login(new Account(username.getText(), new String(password.getPassword()).hashCode()));
+            User user = Client.getClient().userService.login(new Account(username.getText(), new String(password.getPassword()).hashCode()));
             username.setText("");
             password.setText("");
-            if (me == null) {
+            if (user == null) {
                 log.info("登录失败");
                 JOptionPane.showMessageDialog(jf, "用户名或密码错误,请重新输入.");
             } else {
-                Client.getClient().setMe(me);
+                Client.getClient().setMe(user.getUser_id());
                 Client.getClient().start();
                 JOptionPane.showMessageDialog(jf, "登录成功");
             }
         }
         if (e.getSource() == register) {
-            RegisterInterface.getRegisterInterface().createRegisterGUI();
+            RegisterGUI.getRegisterGUI().createRegisterGUI();
         }
     }
-
-    /**
-     * 简单的测试方法.
-     * @param args
-     */
-    public static void main(String[] args) {
-        LoginInterface.loginInterface.createLoginGUI();
-    }
-
-    private LoginInterface() {
-    }
-
 }

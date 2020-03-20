@@ -1,7 +1,7 @@
 package com.humility.client;
 
+import com.humility.client.objectHandlers.KeepAliveHandler;
 import com.humility.datas.KeepAlive;
-import com.humility.datas.User;
 import com.humility.server.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,21 +41,21 @@ public class Client {
     private Socket clientSocket = null;
 
     //接受的对象和对应处理对象之间的映射.
-    private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
 
     //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
-    private User me = null;
+    private Integer me = null;
     private boolean running = false;
     private long lastSendTime;
 
     //服务器的公网ip地址.
     public static final String  SERVER_IP = "127.0.0.1";
 
-    public User getMe() {
+    public Integer getMe() {
         return me;
     }
 
-    public void setMe(User me) {
+    public void setMe(Integer me) {
         this.me = me;
     }
 
@@ -75,7 +75,7 @@ public class Client {
         return client;
     }
 
-    public void addActionMap(Class<? extends Object> clas, ObjectHandler oh) {
+    public void addActionMap(Class<? extends Object> clas, com.humility.client.objectHandlers.ObjectHandler oh) {
         actionMapping.put(clas, oh);
     }
 
@@ -110,6 +110,14 @@ public class Client {
         running = true;
         new Thread(new KeepAliveWatchDog()).start();
         new Thread(new ReceiveWatchDog()).start();
+        try {
+            sendObject(me);
+        } catch (IOException e) {
+            String info = "Fail to send the Id! Please check the connection.";
+            log.info(info);
+            throw new RuntimeException(info, e);
+            //TODO 网络连接异常处理逻辑.
+        }
     }
 
     /**
@@ -199,7 +207,7 @@ public class Client {
      */
     void startGUI() {
         log.info("Login interface...");
-        LoginInterface.getLoginInterface().createLoginGUI();
+        LoginGUI.getLoginGUI().createLoginGUI();
     }
 
     class KeepAliveWatchDog implements Runnable {
@@ -243,7 +251,7 @@ public class Client {
                         ObjectInputStream ois = new ObjectInputStream(inputStream);
                         Object obj = ois.readObject();
                         log.info("Get a object from server.");
-                        ObjectHandler oh = actionMapping.get(obj.getClass());
+                        com.humility.client.objectHandlers.ObjectHandler oh = actionMapping.get(obj.getClass());
                         oh.handleObejct(obj, Client.getClient());
                     }
                 } catch (IOException e) {
@@ -261,9 +269,5 @@ public class Client {
                 }
             }
         }
-    }
-
-    void addObjectHandler(Class<?> clas, ObjectHandler handler) {
-        actionMapping.put(clas, handler);
     }
 }

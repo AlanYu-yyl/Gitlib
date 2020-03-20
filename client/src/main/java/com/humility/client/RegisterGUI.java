@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class RegisterInterface implements ActionListener {
+public class RegisterGUI implements ActionListener {
 
     //ui组件
     private JFrame     jf           = null;
@@ -19,17 +19,17 @@ public class RegisterInterface implements ActionListener {
     private JTextField qqAccount    = null;
 
     //持有自己的唯一实例.
-    private static RegisterInterface registerInterface = new RegisterInterface();
+    private static RegisterGUI registerGUI = new RegisterGUI();
 
     /**
      * 获取自己静态实例的唯一公开接口.
      * @return
      */
-    public static RegisterInterface getRegisterInterface() {
-        return registerInterface;
+    public static RegisterGUI getRegisterGUI() {
+        return registerGUI;
     }
 
-    private RegisterInterface() {
+    private RegisterGUI() {
     }
 
     /**
@@ -81,7 +81,7 @@ public class RegisterInterface implements ActionListener {
         vbox.add(panel6);
 
         handIn = new JButton("提交");
-        handIn.addActionListener(registerInterface);
+        handIn.addActionListener(registerGUI);
 
         vbox.add(handIn);
 
@@ -125,6 +125,6 @@ public class RegisterInterface implements ActionListener {
      * @param args
      */
     public static void main(String[] args) {
-        RegisterInterface.getRegisterInterface().createRegisterGUI();
+        RegisterGUI.getRegisterGUI().createRegisterGUI();
     }
 }
