@@ -7,6 +7,7 @@ import com.humility.utils.JDBCUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -57,11 +58,19 @@ public class Server {
     }
 
     /**
+     * 服务器的启动方法.
+     * @param args  命令行参数.
+     */
+    public static void main(String[] args) {
+        Server.getServer().start();
+    }
+
+    /**
      * 向服务器注册服务.
      * @param service   服务对象.
      * @param port      绑定的端口号.
      */
-    public void register(Object service, int port) {
+    public void register(@org.jetbrains.annotations.NotNull Object service, int port) {
         String serverName = service.getClass().getName();
         log.debug("Registering the " + serverName);
         try {
@@ -83,21 +92,44 @@ public class Server {
         }
     }
 
-    /**
-     * 服务器的启动方法.
-     * @param args  命令行参数.
-     */
-    public static void main(String[] args) {
-        Server.getServer().start();
-    }
+    //默认线程数量.
+    public static final int DEFAULT_THREAD_MIN_NUM = 5;
+    public static final int DEFAULT_THREAD_MAX_NUM = 15;
+
+    //端口号
+    public static final int PORT = 50010;
+
+     //简单的单例模式,类持有自己惟一的静态实例.
+    private static Server server;
+
+    //数据库连接池.
+    private DataSource dataSource = null;
+
+    //线程池.
+    private ExecutorService threadPool = null;
+
+    //封装数据库处理.
+    static JDBCUtils jdbcUtils = new JDBCUtils();
+
+    //客户端在线列表.(使用tcp长连接维护)通过userId映射到对应的socket长连接.
+    private Map<Socket, Long> clientStatus = new HashMap<>();
+
+    //用户id映射,把用户id映射成对应的socket连接
+    private Map<Integer, Socket> idMapper = new HashMap<>();
+
+    //将接收到的对象映射到处理对象上.
+    private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();
+
+    //维持长连接的端口.
+    private ServerSocket serverSocket = null;
 
     /**
-     * Server的内部类.用于处理具体的调用请求.
+     * Server的内部类.用于处理客户端通过远程代理调用的服务.
      * @author Humility <Yiling Yu>
      * @version 1.0.0
      * 创建时间 2020年3月6日23:51:57
      */
-    class Task implements Runnable {
+    private class Task implements Runnable {
         Object service;
         Socket socket;
 
@@ -144,16 +176,31 @@ public class Server {
         }
     }
 
-    void addOnlineUserStatus(Socket socket, Long timeMillis) {
+    /**
+     * 添加用户的在线状态 -- 用id到上次连接的时间戳的映射来表示
+     * @param socket
+     * @param timeMillis
+     */
+    private void addOnlineUserStatus(Socket socket, Long timeMillis) {
         clientStatus.put(socket, timeMillis);
         log.info("A new user online.");
     }
 
-    void addActionMap(Class<? extends Object> clas, ObjectHandler handler) {
+    /**
+     * 添加长连接接受对象的处理方法 -- 通过接受到的对象的class映射到对应的handler.
+     * @param clas
+     * @param handler
+     */
+    private void addActionMap(Class<? extends Object> clas, ObjectHandler handler) {
         actionMapping.put(clas, handler);
     }
 
-    void setOnlineUserStatus(Socket socket, Long timeMillis) {
+    /**
+     * 设置在线用户的状态, 在接收到心跳的时候更新该用户的在线状态.
+     * @param socket
+     * @param timeMillis
+     */
+    private void setOnlineUserStatus(Socket socket, Long timeMillis) {
         long lastReceiveTime = clientStatus.get(socket);
         if (clientStatus.get(socket) != null) {
             clientStatus.replace(socket, lastReceiveTime, timeMillis);
@@ -162,7 +209,10 @@ public class Server {
         }
     }
 
-    public void start() {
+    /**
+     * 服务器的启动方法
+     */
+    private void start() {
         server.addObjectHandler();
         UserService userService = new UserServiceImpl();
         threadPool.submit(() -> server.register(userService, UserServiceImpl.PORT));
@@ -176,7 +226,10 @@ public class Server {
         threadPool.submit(() -> Server.getServer().handleLongCon());
     }
 
-    void handleLongCon() {
+    /**
+     * 长连接处理方法, 遍历用户状态 找出长时间没有心跳的客户端,把它删去.
+     */
+    private void handleLongCon() {
         while (true) {
             Socket socket = null;
             try {
@@ -192,12 +245,22 @@ public class Server {
         }
     }
 
-    void addIdMapper(Integer id, Socket socket) {
+    /**
+     * 添加用户到对应socket长连接的映射 -- 用于服务端向客户端推送消息
+     * @param id
+     * @param socket
+     */
+    private void addIdMapper(Integer id, Socket socket) {
         idMapper.put(id, socket);
         log.info("get a IdMapper!!!");
     }
 
-    class SocketChecker implements Runnable {
+    /**
+     * @author Humility <Yiling Yu>
+     * @version 1.0.0
+     * 创建时间 2020年3月10日22:41:10
+     */
+    private class SocketChecker implements Runnable {
         Socket socket = null;
 
         public SocketChecker(Socket socket) {
@@ -247,39 +310,13 @@ public class Server {
         }
     }
 
-    //默认线程数量.
-    public static final int DEFAULT_THREAD_MIN_NUM = 5;
-    public static final int DEFAULT_THREAD_MAX_NUM = 15;
-
-    //端口号
-    public static final int PORT = 50010;
-
-     //简单的单例模式,类持有自己惟一的静态实例.
-    private static Server server;
-
-    //数据库连接池.
-    private DataSource dataSource = null;
-
-    //线程池.
-    private ExecutorService threadPool = null;
-
-    //封装数据库处理.
-    static JDBCUtils jdbcUtils = new JDBCUtils();
-
-    //客户端在线列表.(使用tcp长连接维护)通过userId映射到对应的socket长连接.
-    private Map<Socket, Long> clientStatus = new HashMap<>();
-
-    //用户id映射,把用户id映射成对应的socket连接
-    private Map<Integer, Socket> idMapper = new HashMap<>();
-
-    //将接收到的对象映射到处理对象上.
-    private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();
-
-    //维持长连接的端口.
-    private ServerSocket serverSocket = null;
-
-    void closeTheSocket(Socket socket) {
+    /**
+     * 关闭tcp长连接的辅助方法
+     */
+    private void closeTheSocket(Socket socket) {
         if (socket != null) {
+            clientStatus.remove(socket);
+
             try{
                 socket.close();
             } catch (IOException e) {
@@ -288,7 +325,10 @@ public class Server {
         }
     }
 
-    void addObjectHandler() {
+    /**
+     * 添加长连接接收到的对象的处理方法
+     */
+    private void addObjectHandler() {
         log.debug("Adding objectHandler...");
         addActionMap(KeepAlive.class, new KeepAliveHandler());
         log.debug("Success!");
@@ -300,7 +340,7 @@ public class Server {
      * @param config        配置对象
      * @param dbcpConfig    具体配置
      */
-    private void getDBCPConfig(HikariConfig config, Properties dbcpConfig) {
+    private void getDBCPConfig(@NotNull HikariConfig config, @NotNull Properties dbcpConfig) {
         config.setDriverClassName(dbcpConfig.getProperty("driver"));
         config.setJdbcUrl(dbcpConfig.getProperty("url"));
         config.setUsername(dbcpConfig.getProperty("username"));
@@ -353,3 +393,4 @@ public class Server {
         log.debug("Success to get the dataSource");
     }
 }
+
