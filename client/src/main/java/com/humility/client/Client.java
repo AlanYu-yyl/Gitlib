@@ -108,8 +108,6 @@ public class Client {
         log.debug("本地端口: " + clientSocket.getLocalPort());
         lastSendTime = System.currentTimeMillis();
         running = true;
-        new Thread(new KeepAliveWatchDog()).start();
-        new Thread(new ReceiveWatchDog()).start();
         try {
             sendObject(me);
         } catch (IOException e) {
@@ -118,6 +116,8 @@ public class Client {
             throw new RuntimeException(info, e);
             //TODO 网络连接异常处理逻辑.
         }
+        new Thread(new KeepAliveWatchDog()).start();
+        new Thread(new ReceiveWatchDog()).start();
     }
 
     /**
