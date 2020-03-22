@@ -42,7 +42,7 @@ public class RegisterGUI implements ActionListener {
         JLabel inputPassword      = new JLabel("密      码");
         JLabel inputRealname      = new JLabel("真实姓名");
         JLabel inputPhoneNumber   = new JLabel("手机号码");
-        JLabel inputEmailAddress  = new JLabel("电子邮件");
+        JLabel inputEmailAddress  = new JLabel("电子邮箱");
         JLabel inputQqAccount     = new JLabel("QQ账号");
 
         username       = new JTextField(10);
@@ -118,13 +118,5 @@ public class RegisterGUI implements ActionListener {
                 JOptionPane.showMessageDialog(jf, "用户名和密码不能为空!");
             }
         }
-    }
-
-    /**
-     * 简单的测试方法.
-     * @param args
-     */
-    public static void main(String[] args) {
-        RegisterGUI.getRegisterGUI().createRegisterGUI();
     }
 }
