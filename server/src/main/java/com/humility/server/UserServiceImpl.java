@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(Account account) {
         User result = null;
-        result = jdbcUtils.checkAccount(account);
+        result = jdbcUtils.queryUser(account);
         if (result != null) {
             Server.getServer().setUserStatus(result.getUser_id(), Server.ClientStatus.Status.ONLINE);
         }
@@ -32,12 +32,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean register(User user) {
         Boolean result = false;
-        int line = jdbcUtils.insertUser(user);
+        int line = jdbcUtils.insertUserInfo(user);
         if (line > 0)
             result = true;
         String username = user.getUsername();
         Integer password = user.getPassword();
-        User registeredUser = jdbcUtils.checkAccount(new Account(username, password));
+        User registeredUser = jdbcUtils.queryUser(new Account(username, password));
         Server.getServer().addRegisteredUser(registeredUser.getUser_id());
         return result;
     }
