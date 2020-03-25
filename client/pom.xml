@@ -17,12 +17,4 @@
     <artifactId>client</artifactId>
     <version>1.0.0</version>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.humility.server</groupId>
-            <artifactId>server</artifactId>
-            <version>${com.humility.server.server.version}</version>
-        </dependency>
-    </dependencies>
-
 </project>

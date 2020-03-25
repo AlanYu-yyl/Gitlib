@@ -100,7 +100,7 @@ public class Server {
     public static final int DEFAULT_THREAD_MAX_NUM = 15;
 
     //端口号
-    public static final int PORT = 50010;
+    public static final int PORT = 50000;
 
     //封装数据库处理.
     static JDBCUtils jdbcUtils = new JDBCUtils();

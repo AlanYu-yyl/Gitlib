@@ -1,8 +1,11 @@
 package com.humility.client;
 
+import com.humility.client.interfaces.ChatService;
+import com.humility.client.interfaces.GoodService;
+import com.humility.client.interfaces.TransactionService;
+import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
 import com.humility.datas.KeepAlive;
-import com.humility.server.*;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -99,7 +102,7 @@ public class Client {
         if (running) return;
         log.debug("Getting the longSocket...");
         try {
-            Client.getClient().clientSocket = new Socket(SERVER_IP, Server.PORT);
+            Client.getClient().clientSocket = new Socket(SERVER_IP, SERVER_PORT);
         } catch (IOException e) {
             String info = "Fail to get the socket long connection.";
             log.error(info);
@@ -141,19 +144,19 @@ public class Client {
     private Client() {
         log.debug("Initializing...");
         log.debug("Loading the userService.");
-        userService = (UserService) Client.getProxy(UserService.class, SERVER_IP, UserServiceImpl.PORT);
+        userService = (UserService) Client.getProxy(UserService.class, SERVER_IP, USERSERVICE_PORT);
         log.debug("Success!");
 
         log.debug("Loading the goodService.");
-        goodService = (GoodService) Client.getProxy(GoodService.class, SERVER_IP, GoodServiceImpl.PORT);
+        goodService = (GoodService) Client.getProxy(GoodService.class, SERVER_IP, GOODSERVICE_PORT);
         log.debug("Success!");
 
         log.debug("Loading the transactionService.");
-        transactionService = (TransactionService) Client.getProxy(TransactionService.class, SERVER_IP, TransactionServiceImpl.PORT);
+        transactionService = (TransactionService) Client.getProxy(TransactionService.class, SERVER_IP, TRANSACTIONSERVICE_PORT);
         log.debug("Success!");
 
         log.debug("Loading the chatService.");
-        chatService = (ChatService) Client.getProxy(ChatService.class, SERVER_IP, ChatServiceImpl.PORT);
+        chatService = (ChatService) Client.getProxy(ChatService.class, SERVER_IP, CHATSERVICE_PORT);
         log.debug("Success!");
 
         log.debug("Loading the objectHandlers...");
@@ -264,10 +267,19 @@ public class Client {
                 }
                 try {
                     Thread.sleep(100);
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                     log.error("InterruptedException!!");
                 }
             }
         }
     }
+
+
+    //服务器各项服务的端口号
+    public static final int USERSERVICE_PORT = 50001;
+    public static final int GOODSERVICE_PORT = 50004;
+    public static final int TRANSACTIONSERVICE_PORT = 50002;
+    public static final int CHATSERVICE_PORT = 50003;
+    public static final int SERVER_PORT = 50000;
+
 }
