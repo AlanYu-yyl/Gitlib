@@ -1,5 +1,6 @@
-package com.humility.client;
+package com.humility.client.view;
 
+import com.humility.client.Client;
 import com.humility.datas.User;
 
 import javax.swing.*;

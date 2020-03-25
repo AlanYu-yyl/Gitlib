@@ -1,5 +1,6 @@
-package com.humility.client;
+package com.humility.client.view;
 
+import com.humility.client.Client;
 import com.humility.datas.Account;
 import com.humility.datas.User;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class LoginGUI implements ActionListener {
     /**
      * 创建登录和注册的gui界面.
      */
-    void createLoginGUI() {
+    public void createLoginGUI() {
         jf = new JFrame("用户登录");
         jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

@@ -5,6 +5,7 @@ import com.humility.client.interfaces.GoodService;
 import com.humility.client.interfaces.TransactionService;
 import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
+import com.humility.client.view.LoginGUI;
 import com.humility.datas.KeepAlive;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Client {
 
     //所有服务对象的代理.
-    UserService userService;
+    public UserService userService;
     GoodService goodService;
     TransactionService transactionService;
     ChatService chatService;
