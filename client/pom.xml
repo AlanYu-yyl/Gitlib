@@ -10,11 +10,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <com.humility.server.server.version>1.0.0</com.humility.server.server.version>
+        <darcula.version>1.0</darcula.version>
     </properties>
 
     <groupId>com.humility.client</groupId>
     <artifactId>client</artifactId>
     <version>1.0.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.konstantin</groupId>
+            <artifactId>darcula</artifactId>
+            <version>${darcula.version}</version>
+        </dependency>
+    </dependencies>
 
 </project>
