@@ -5,7 +5,6 @@ import com.humility.client.interfaces.GoodService;
 import com.humility.client.interfaces.TransactionService;
 import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
-import com.humility.client.view.LoginGUI;
 import com.humility.datas.KeepAlive;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,41 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class Client {
 
-    //所有服务对象的代理.
-    public UserService userService;
-    GoodService goodService;
-    TransactionService transactionService;
-    ChatService chatService;
-
-    //自己持有自己的唯一实例
-    private static Client client = null;
-
-    public Socket getClientSocket() {
-        return clientSocket;
-    }
-
-    //持有自己的心跳连接.
-    private Socket clientSocket = null;
-
-    //接受的对象和对应处理对象之间的映射.
-    private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
-
-    //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
-    private Integer me = null;
-    private boolean running = false;
-    private long lastSendTime;
-
-    //服务器的公网ip地址.
-    public static final String  SERVER_IP = "127.0.0.1";
-
-    public Integer getMe() {
-        return me;
-    }
-
-    public void setMe(Integer me) {
-        this.me = me;
-    }
-
     /**
      * 用于获取client唯一实例的公开接口.
      * @return
@@ -79,20 +43,22 @@ public class Client {
         return client;
     }
 
-    public void addActionMap(Class<? extends Object> clas, com.humility.client.objectHandlers.ObjectHandler oh) {
-        actionMapping.put(clas, oh);
-    }
-
     /**
-     * 通过长连接向服务端发送连接.
-     * @param obj
-     * @throws IOException
+     * 客户端程序的入口
+     * @param args  命令行参数
      */
-    public void sendObject(Object obj) throws IOException {
-        ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-        oos.writeObject(obj);
-        log.info("Send a object.");
-        oos.flush();
+    public static void main(String[] args) {
+        log.debug("Initializing...");
+        log.debug("Creating the client instance...");
+        Client.getClient();
+        log.debug("Initialization successful!");
+
+        log.debug("Creating the user interface.");
+        SwingUtilities.invokeLater(() -> {
+            log.info("Login interface...");
+            LoginGUI.getLoginGUI().createLoginGUI();
+        });
+        log.debug("GUI is running!");
     }
 
     /**
@@ -125,19 +91,81 @@ public class Client {
     }
 
     /**
-     * 客户端程序的入口
-     * @param args  命令行参数
+     * 向服务端维持心跳的内部类. 通过start启动
      */
-    public static void main(String[] args) {
-        log.debug("Initializing...");
-        log.debug("Creating the client instance...");
-        Client.getClient();
-        log.debug("Initialization successful!");
+    class KeepAliveWatchDog implements Runnable {
 
-        log.debug("Creating the user interface.");
-        SwingUtilities.invokeLater(() -> client.startGUI());
-        log.debug("GUI is running!");
+        long checkDelay = 100;
+        long keepAliveDelay = 20000;
+
+        @Override
+        public void run() {
+            while (running) {
+                if (System.currentTimeMillis() - lastSendTime > keepAliveDelay) {
+                    try {
+                        Client.getClient().sendObject(new KeepAlive());
+                        lastSendTime = System.currentTimeMillis();
+                    } catch (IOException e) {
+                        String info = "Fail to send the object, please check the internet connection.";
+                        log.error(info);
+                        Client.getClient().running = false;
+                        //TODO 网络连接异常处理逻辑.
+                    }
+                } else {
+                    try {
+                        Thread.sleep(checkDelay);
+                    } catch (InterruptedException e) {
+                        log.error("InterruptedException!" + " In the KeepAliveWatchDog.");
+                        //TODO 线程停止异常的处理逻辑.
+                    }
+                }
+            }
+        }
     }
+
+    /**
+     * 接受服务端发来对象的类, 通过start启动.
+     */
+    class ReceiveWatchDog implements Runnable {
+
+        @Override
+        public void run() {
+            while (running) {
+                try {
+                    InputStream inputStream = Client.getClient().clientSocket.getInputStream();
+                    if (inputStream.available() > 0) {
+                        ObjectInputStream ois = new ObjectInputStream(inputStream);
+                        Object obj = ois.readObject();
+                        log.info("Get a object from server.");
+                        com.humility.client.objectHandlers.ObjectHandler oh = actionMapping.get(obj.getClass());
+                        oh.handleObejct(obj, Client.getClient());
+                    }
+                } catch (IOException e) {
+                    log.error("There is something wrong with the internet connection." + " In the clientSocket.");
+                    Client.getClient().running = false;
+                    //TODO 网络连接异常的处理逻辑
+                } catch (ClassNotFoundException e) {
+                    log.error("Receive a unknown object." + " In the clientSocket.");
+                    //TODO 接口错误的处理逻辑.
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    log.error("InterruptedException!!");
+                }
+            }
+        }
+    }
+
+    //服务器的公网ip地址.
+    public static final String  SERVER_IP = "127.0.0.1";
+
+    //服务器各项服务的端口号
+    public static final int USERSERVICE_PORT = 50001;
+    public static final int GOODSERVICE_PORT = 50004;
+    public static final int TRANSACTIONSERVICE_PORT = 50002;
+    public static final int CHATSERVICE_PORT = 50003;
+    public static final int SERVER_PORT = 50000;
 
     /**
      * 简单的单例模式,私有的构造器防止外部创建client对象.
@@ -161,7 +189,7 @@ public class Client {
         log.debug("Success!");
 
         log.debug("Loading the objectHandlers...");
-        this.addActionMap(KeepAlive.class, new KeepAliveHandler());
+        actionMapping.put(KeepAlive.class, new KeepAliveHandler());
         log.debug("Initialize successful!");
     }
 
@@ -197,7 +225,7 @@ public class Client {
                             log.error(info);
                             //TODO 补上方法调用失败(或者是输出流没问题,输入流出了问题)的处理逻辑.
                         }
-                        } catch (IOException e) {
+                    } catch (IOException e) {
                         String info = "Fail to transform the data!" + " While invoking the method: " + methodName;
                         log.error(info);
                         //TODO io异常处理逻辑.
@@ -207,80 +235,35 @@ public class Client {
     }
 
     /**
-     * 开始创建并运行gui界面.
+     * 通过长连接向服务端发送对象的辅助方法.
+     * @param obj
+     * @throws IOException
      */
-    void startGUI() {
-        log.info("Login interface...");
-        LoginGUI.getLoginGUI().createLoginGUI();
+    private void sendObject(Object obj) throws IOException {
+        ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+        oos.writeObject(obj);
+        log.info("Send a object.");
+        oos.flush();
     }
 
-    class KeepAliveWatchDog implements Runnable {
+    //自己持有自己的唯一实例
+    private static Client client = null;
 
-        long checkDelay = 100;
-        long keepAliveDelay = 20000;
+    //持有自己的心跳连接.
+    private Socket clientSocket = null;
 
-        @Override
-        public void run() {
-            while (running) {
-                if (System.currentTimeMillis() - lastSendTime > keepAliveDelay) {
-                    try {
-                        Client.getClient().sendObject(new KeepAlive());
-                        lastSendTime = System.currentTimeMillis();
-                    } catch (IOException e) {
-                        String info = "Fail to send the object, please check the internet connection.";
-                        log.error(info);
-                        Client.getClient().running = false;
-                        //TODO 网络连接异常处理逻辑.
-                    }
-                } else {
-                    try {
-                        Thread.sleep(checkDelay);
-                    } catch (InterruptedException e) {
-                        log.error("InterruptedException!" + " In the KeepAliveWatchDog.");
-                        //TODO 线程停止异常的处理逻辑.
-                    }
-                }
-            }
-        }
-    }
+    //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
+    Integer me = null;
+    private boolean running = false;
+    private long lastSendTime;
 
-    class ReceiveWatchDog implements Runnable {
+    //接受的对象和对应处理对象之间的映射.
+    private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
 
-        @Override
-        public void run() {
-            while (running) {
-                try {
-                    InputStream inputStream = Client.getClient().clientSocket.getInputStream();
-                    if (inputStream.available() > 0) {
-                        ObjectInputStream ois = new ObjectInputStream(inputStream);
-                        Object obj = ois.readObject();
-                        log.info("Get a object from server.");
-                        com.humility.client.objectHandlers.ObjectHandler oh = actionMapping.get(obj.getClass());
-                        oh.handleObejct(obj, Client.getClient());
-                    }
-                } catch (IOException e) {
-                    log.error("There is something wrong with the internet connection." + " In the clientSocket.");
-                    Client.getClient().running = false;
-                    //TODO 网络连接异常的处理逻辑
-                } catch (ClassNotFoundException e) {
-                    log.error("Receive a unknown object." + " In the clientSocket.");
-                    //TODO 接口错误的处理逻辑.
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    log.error("InterruptedException!!");
-                }
-            }
-        }
-    }
-
-
-    //服务器各项服务的端口号
-    public static final int USERSERVICE_PORT = 50001;
-    public static final int GOODSERVICE_PORT = 50004;
-    public static final int TRANSACTIONSERVICE_PORT = 50002;
-    public static final int CHATSERVICE_PORT = 50003;
-    public static final int SERVER_PORT = 50000;
+    //所有服务对象的代理.
+    UserService userService;
+    GoodService goodService;
+    TransactionService transactionService;
+    ChatService chatService;
 
 }

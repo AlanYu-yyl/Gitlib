@@ -6,9 +6,11 @@ import com.humility.server.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ArrayHandler;
+import org.apache.commons.dbutils.handlers.ArrayListHandler;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 @Slf4j
 public class JDBCUtils {
@@ -64,6 +66,19 @@ public class JDBCUtils {
         return ret;
     }
 
+    public List<Object[]> queryAllUsers() throws RuntimeException {
+        String sql = "SELECT user_id FROM users";
+        List<Object[]> userArray = null;
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            userArray = queryRunner.query(con, sql, new ArrayListHandler());
+        } catch (SQLException e) {
+            String info = "Fail to load the info of users!";
+            log.error(info);
+            throw new RuntimeException(info ,e);
+        }
+        return userArray;
+    }
+
     /**
      * 通过账号信息来查询用户的详细信息.
      * @param account
@@ -99,7 +114,6 @@ public class JDBCUtils {
 
     //用于封装数据库查询的对象.
     private QueryRunner queryRunner;
-
 
     /**
      * 简单的无参初始化器.

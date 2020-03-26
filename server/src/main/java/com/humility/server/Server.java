@@ -26,9 +26,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -154,13 +152,16 @@ public class Server {
      * 服务器的启动方法
      */
     private void start() {
+        log.info("Loading the info of all users...");
+        server.loadUsersInfo();
+        log.info("Success!");
         server.addObjectHandler();
         UserService userService = new UserServiceImpl();
         threadPool.submit(() -> server.register(userService, UserServiceImpl.PORT));
         ChatService chatService = new ChatServiceImpl();
-        threadPool.submit(() -> server.register(chatService,ChatServiceImpl.PORT));
+        threadPool.submit(() -> server.register(chatService, ChatServiceImpl.PORT));
         GoodService goodService = new GoodServiceImpl();
-        threadPool.submit(() -> server.register(goodService,GoodServiceImpl.PORT));
+        threadPool.submit(() -> server.register(goodService, GoodServiceImpl.PORT));
         TransactionService transactionService = new TransactionServiceImpl();
         threadPool.submit(() -> server.register(transactionService, TransactionServiceImpl.PORT));
         //开一个线程检查客户端的活跃性.
@@ -209,6 +210,15 @@ public class Server {
             String info = "Fail to get the serviceSocket!" + "  Maybe the port has been occupied.";
             log.error(info);
             throw new RuntimeException(info, e);
+        }
+    }
+
+    private void loadUsersInfo() {
+        List<Object[]> usersInfo = jdbcUtils.queryAllUsers();
+        for (Iterator<Object[]> iter = usersInfo.iterator(); iter.hasNext();) {
+            ClientStatus clientStatus = new ClientStatus();
+            clientStatus.setStatus(ClientStatus.Status.OFFLINE);
+            clientStatusMap.put((Integer)iter.next()[0], clientStatus);
         }
     }
 
