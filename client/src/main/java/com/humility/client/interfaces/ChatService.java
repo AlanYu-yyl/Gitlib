@@ -1,5 +1,9 @@
 package com.humility.client.interfaces;
 
+import com.humility.datas.Message;
+
+import java.util.List;
+
 /**
  * 处理聊天业务的服务对象
  * @author Humility <Yiling Yu>
@@ -9,11 +13,11 @@ package com.humility.client.interfaces;
 public interface ChatService {
 
     /**
-     * 客户端用来接收信息的方法.
+     * 客户端用来接收离线信息的方法.
      * @param userId 接受者的用户id用于map到对应的socket上
-     * @return 返回自己收到的消息.
+     * @return 返回一个离线消息的线性表.
      */
-    public String getMessage(Integer userId);
+    public List<Message> getOffLineMessages(Integer userId);
 
     /**
      * 客户端发送信息的方法.

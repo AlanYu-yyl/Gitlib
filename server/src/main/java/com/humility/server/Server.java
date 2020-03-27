@@ -51,6 +51,34 @@ public class Server {
     }
 
     /**
+     * 向客户端发送对象.
+     * @param receiver
+     * @param obj
+     * @return false 代表客户端不在线对象发送失败, true 代表对象发送成功.
+     */
+    public boolean sendObject(Integer receiver, Object obj) {
+        boolean ret = true;
+        ClientStatus status = clientStatusMap.get(receiver);
+        if (status.getStatus() == ClientStatus.Status.OFFLINE) {
+            ret = false;
+            return ret;
+        }
+        Socket socket = status.getSocket();
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            oos.writeObject(obj);
+            oos.flush();
+            status.setLastReceiveTime(System.currentTimeMillis());
+        } catch (IOException e) {
+            log.error("Fail to send obj to user " + receiver);
+            log.info("User " + receiver + " offline");
+            status.setStatus(ClientStatus.Status.OFFLINE);
+            ret = false;
+        }
+        return ret;
+    }
+
+    /**
      * 获取数据库连接池.
      * @return
      */
@@ -191,7 +219,7 @@ public class Server {
      * @param service   服务对象.
      * @param port      绑定的端口号.
      */
-    private void register(@org.jetbrains.annotations.NotNull Object service, int port) {
+    private void register(@NotNull Object service, int port) {
         String serverName = service.getClass().getName();
         log.debug("Registering the " + serverName);
         try {
