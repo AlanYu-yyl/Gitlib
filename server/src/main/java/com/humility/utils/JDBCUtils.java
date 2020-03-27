@@ -118,27 +118,11 @@ public class JDBCUtils {
         List<Object[]> offLineMessages = null;
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
             offLineMessages = queryRunner.query(con, sql, new ArrayListHandler(), param);
+            this.deleteOffLineMessage(getterId);
         } catch (SQLException e) {
             log.error("Fail to get the offline messages of user " + getterId);
         }
         return offLineMessages;
-    }
-
-    /**
-     * 删除某用户的离线消息.
-     * @param userId
-     * @return
-     */
-    public int deleteOffLineMessage(Integer userId) {
-        int line = 0;
-        String sql = "DELETE FROM offline_messages WHERE getter_id=?";
-        Object[] param = {userId};
-        try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            line = queryRunner.update(con, sql, param);
-        } catch(SQLException e) {
-            log.error("Fail to delete the offLineMessage of user " + userId);
-        }
-        return line;
     }
 
     /**
@@ -190,6 +174,23 @@ public class JDBCUtils {
             //TODO 查询失败的处理逻辑.
         }
         return ret;
+    }
+
+    /**
+     * 删除某用户的离线消息.
+     * @param userId
+     * @return
+     */
+    private int deleteOffLineMessage(Integer userId) {
+        int line = 0;
+        String sql = "DELETE FROM offline_messages WHERE getter_id=?";
+        Object[] param = {userId};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            line = queryRunner.update(con, sql, param);
+        } catch(SQLException e) {
+            log.error("Fail to delete the offLineMessage of user " + userId);
+        }
+        return line;
     }
 
     //用于封装数据库查询的对象.
