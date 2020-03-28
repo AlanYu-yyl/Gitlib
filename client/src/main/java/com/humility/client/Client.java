@@ -56,7 +56,7 @@ public class Client {
         log.debug("Creating the user interface.");
         SwingUtilities.invokeLater(() -> {
             log.info("Login interface...");
-            LoginGUI.getLoginGUI().createLoginGUI();
+            //TODO 创建GUI界面.
         });
         log.debug("GUI is running!");
     }
