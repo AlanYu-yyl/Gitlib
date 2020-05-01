@@ -5,10 +5,10 @@ import com.humility.client.interfaces.GoodService;
 import com.humility.client.interfaces.TransactionService;
 import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
+import com.humility.client.view.Login;
 import com.humility.datas.KeepAlive;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -52,12 +52,9 @@ public class Client {
         log.debug("Creating the client instance...");
         Client.getClient();
         log.debug("Initialization successful!");
-
         log.debug("Creating the user interface.");
-        SwingUtilities.invokeLater(() -> {
-            log.info("Login interface...");
-            //TODO 创建GUI界面.
-        });
+        log.info("Login interface...");
+        Login.main(null);
         log.debug("GUI is running!");
     }
 
@@ -88,6 +85,34 @@ public class Client {
         }
         new Thread(new KeepAliveWatchDog()).start();
         new Thread(new ReceiveWatchDog()).start();
+    }
+
+    /**
+     * 各种属性的getter
+     * @param me
+     */
+    public void setMe(Integer me) {
+        this.me = me;
+    }
+
+    public Integer getMe() {
+        return me;
+    }
+
+    public UserService getUserService() {
+        return userService;
+    }
+
+    public GoodService getGoodService() {
+        return goodService;
+    }
+
+    public TransactionService getTransactionService() {
+        return transactionService;
+    }
+
+    public ChatService getChatService() {
+        return chatService;
     }
 
     /**
@@ -253,7 +278,7 @@ public class Client {
     private Socket clientSocket = null;
 
     //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
-    Integer me = null;
+    private Integer me = null;
     private boolean running = false;
     private long lastSendTime;
 
@@ -261,9 +286,9 @@ public class Client {
     private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
 
     //所有服务对象的代理.
-    UserService userService;
-    GoodService goodService;
-    TransactionService transactionService;
-    ChatService chatService;
+    private UserService userService;
+    private GoodService goodService;
+    private TransactionService transactionService;
+    private ChatService chatService;
 
 }

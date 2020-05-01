@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <darcula.version>1.0</darcula.version>
+        <flatlaf.version>0.30</flatlaf.version>
     </properties>
 
     <groupId>com.humility.client</groupId>
@@ -19,9 +19,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.konstantin</groupId>
-            <artifactId>darcula</artifactId>
-            <version>${darcula.version}</version>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>${flatlaf.version}</version>
         </dependency>
     </dependencies>
 

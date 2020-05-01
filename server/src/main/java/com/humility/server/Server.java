@@ -1,12 +1,5 @@
 package com.humility.server;
 
-/**
- * curriculum-design-server
- * @author Humility <Yiling Yu>
- * @version 1.0.0
- * 创建时间 2020年3月6日23:44:31
- */
-
 import com.humility.datas.KeepAlive;
 import com.humility.server.objectHandler.KeepAliveHandler;
 import com.humility.server.objectHandler.ObjectHandler;
@@ -29,6 +22,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * curriculum-design-server
+ * @author Humility <Yiling Yu>
+ * @version 1.0.0
+ * 创建时间 2020年3月6日23:44:31
+ */
 @Slf4j
 public class Server {
 
@@ -157,7 +156,7 @@ public class Server {
         log.debug("Trying to get the dbcp...");
         HikariConfig config = new HikariConfig();
         //TODO 记得更换相应路径.
-        String fileName = "D:\\Programme\\workspace\\java\\idea\\curriculum-design\\server\\src\\main\\resources\\dbcp.properties";
+        String fileName = "server\\target\\classes\\dbcp.properties";
         Properties dbcpConfig = null;
         try (FileReader fr = new FileReader(fileName)) {
             dbcpConfig = new Properties();
@@ -206,7 +205,7 @@ public class Server {
                 socket = Server.getServer().serverSocket.accept();
             } catch (IOException e) {
                 log.error("Fail to get the socket connection." + " In the server.");
-                //TODO 处理逻辑.
+                //TODO 异常处理逻辑.
             }
             Thread socketChecker = new Thread(new SocketChecker(socket));
             socketChecker.setPriority(2);
