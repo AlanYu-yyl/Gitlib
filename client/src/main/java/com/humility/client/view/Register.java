@@ -47,6 +47,7 @@ public class Register extends javax.swing.JFrame {
         hand_in = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("二手交易市场");
 
         register_font.setFont(new java.awt.Font("宋体", 1, 48)); // NOI18N
         register_font.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);

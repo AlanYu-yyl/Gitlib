@@ -27,268 +27,268 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class Client {
 
-    /**
-     * 用于获取client唯一实例的公开接口.
-     * @return
-     */
-    public static Client getClient() {
-        //双重加锁.
+  /**
+   * 用于获取client唯一实例的公开接口.
+   * @return
+   */
+  public static Client getClient() {
+    //双重加锁.
+    if (client == null) {
+      synchronized(Client.class) {
         if (client == null) {
-            synchronized(Client.class) {
-                if (client == null) {
-                    client = new Client();
-                }
-            }
+          client = new Client();
         }
-        return client;
+      }
     }
+    return client;
+  }
 
-    /**
-     * 客户端程序的入口
-     * @param args  命令行参数
-     */
-    public static void main(String[] args) {
-        log.debug("Initializing...");
-        log.debug("Creating the client instance...");
-        Client.getClient();
-        log.debug("Initialization successful!");
-        log.debug("Creating the user interface.");
-        log.info("Login interface...");
-        Login.main(null);
-        log.debug("GUI is running!");
+  /**
+   * 客户端程序的入口
+   * @param args  命令行参数
+   */
+  public static void main(String[] args) {
+    log.debug("Initializing...");
+    log.debug("Creating the client instance...");
+    Client.getClient();
+    log.debug("Initialization successful!");
+    log.debug("Creating the user interface.");
+    log.info("Login interface...");
+    Login.main(null);
+    log.debug("GUI is running!");
+  }
+
+  /**
+   * 开始正式运行客户端.
+   * 在登录通过之后被调用,用来和服务器保持心跳连接.
+   */
+  public void start() {
+    if (running) return;
+    log.debug("Getting the longSocket...");
+    try {
+      Client.getClient().clientSocket = new Socket(SERVER_IP, SERVER_PORT);
+    } catch (IOException e) {
+      String info = "Fail to get the socket long connection.";
+      log.error(info);
+      throw new RuntimeException(info, e);
     }
+    log.debug("本地端口: " + clientSocket.getLocalPort());
+    lastSendTime = System.currentTimeMillis();
+    running = true;
+    try {
+      sendObject(me);
+    } catch (IOException e) {
+      String info = "Fail to send the Id! Please check the connection.";
+      log.info(info);
+      throw new RuntimeException(info, e);
+      //TODO 网络连接异常处理逻辑.
+    }
+    new Thread(new KeepAliveWatchDog()).start();
+    new Thread(new ReceiveWatchDog()).start();
+  }
 
-    /**
-     * 开始正式运行客户端.
-     * 在登录通过之后被调用,用来和服务器保持心跳连接.
-     */
-    public void start() {
-        if (running) return;
-        log.debug("Getting the longSocket...");
-        try {
-            Client.getClient().clientSocket = new Socket(SERVER_IP, SERVER_PORT);
-        } catch (IOException e) {
-            String info = "Fail to get the socket long connection.";
+  /**
+   * 各种属性的getter
+   * @param me
+   */
+  public void setMe(Integer me) {
+    this.me = me;
+  }
+
+  public Integer getMe() {
+    return me;
+  }
+
+  public UserService getUserService() {
+    return userService;
+  }
+
+  public GoodService getGoodService() {
+    return goodService;
+  }
+
+  public TransactionService getTransactionService() {
+    return transactionService;
+  }
+
+  public ChatService getChatService() {
+    return chatService;
+  }
+
+  /**
+   * 向服务端维持心跳的内部类. 通过start启动
+   */
+  class KeepAliveWatchDog implements Runnable {
+
+    long checkDelay = 100;
+    long keepAliveDelay = 20000;
+
+    @Override
+    public void run() {
+      while (running) {
+        if (System.currentTimeMillis() - lastSendTime > keepAliveDelay) {
+          try {
+            Client.getClient().sendObject(new KeepAlive());
+            lastSendTime = System.currentTimeMillis();
+          } catch (IOException e) {
+            String info = "Fail to send the object, please check the internet connection.";
             log.error(info);
-            throw new RuntimeException(info, e);
-        }
-        log.debug("本地端口: " + clientSocket.getLocalPort());
-        lastSendTime = System.currentTimeMillis();
-        running = true;
-        try {
-            sendObject(me);
-        } catch (IOException e) {
-            String info = "Fail to send the Id! Please check the connection.";
-            log.info(info);
-            throw new RuntimeException(info, e);
+            Client.getClient().running = false;
             //TODO 网络连接异常处理逻辑.
+          }
+        } else {
+          try {
+            Thread.sleep(checkDelay);
+          } catch (InterruptedException e) {
+            log.error("InterruptedException!" + " In the KeepAliveWatchDog.");
+            //TODO 线程停止异常的处理逻辑.
+          }
         }
-        new Thread(new KeepAliveWatchDog()).start();
-        new Thread(new ReceiveWatchDog()).start();
+      }
     }
+  }
 
-    /**
-     * 各种属性的getter
-     * @param me
-     */
-    public void setMe(Integer me) {
-        this.me = me;
-    }
+  /**
+   * 接受服务端发来对象的类, 通过start启动.
+   */
+  class ReceiveWatchDog implements Runnable {
 
-    public Integer getMe() {
-        return me;
-    }
-
-    public UserService getUserService() {
-        return userService;
-    }
-
-    public GoodService getGoodService() {
-        return goodService;
-    }
-
-    public TransactionService getTransactionService() {
-        return transactionService;
-    }
-
-    public ChatService getChatService() {
-        return chatService;
-    }
-
-    /**
-     * 向服务端维持心跳的内部类. 通过start启动
-     */
-    class KeepAliveWatchDog implements Runnable {
-
-        long checkDelay = 100;
-        long keepAliveDelay = 20000;
-
-        @Override
-        public void run() {
-            while (running) {
-                if (System.currentTimeMillis() - lastSendTime > keepAliveDelay) {
-                    try {
-                        Client.getClient().sendObject(new KeepAlive());
-                        lastSendTime = System.currentTimeMillis();
-                    } catch (IOException e) {
-                        String info = "Fail to send the object, please check the internet connection.";
-                        log.error(info);
-                        Client.getClient().running = false;
-                        //TODO 网络连接异常处理逻辑.
-                    }
-                } else {
-                    try {
-                        Thread.sleep(checkDelay);
-                    } catch (InterruptedException e) {
-                        log.error("InterruptedException!" + " In the KeepAliveWatchDog.");
-                        //TODO 线程停止异常的处理逻辑.
-                    }
-                }
-            }
+    @Override
+    public void run() {
+      while (running) {
+        try {
+          InputStream inputStream = Client.getClient().clientSocket.getInputStream();
+          if (inputStream.available() > 0) {
+            ObjectInputStream ois = new ObjectInputStream(inputStream);
+            Object obj = ois.readObject();
+            log.info("Get a object from server.");
+            com.humility.client.objectHandlers.ObjectHandler oh = actionMapping.get(obj.getClass());
+            oh.handleObejct(obj, Client.getClient());
+          }
+        } catch (IOException e) {
+          log.error("There is something wrong with the internet connection." + " In the clientSocket.");
+          Client.getClient().running = false;
+          //TODO 网络连接异常的处理逻辑
+        } catch (ClassNotFoundException e) {
+          log.error("Receive a unknown object." + " In the clientSocket.");
+          //TODO 接口错误的处理逻辑.
         }
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          log.error("InterruptedException!!");
+        }
+      }
     }
+  }
 
-    /**
-     * 接受服务端发来对象的类, 通过start启动.
-     */
-    class ReceiveWatchDog implements Runnable {
+  //服务器的公网ip地址.
+  public static final String  SERVER_IP = "127.0.0.1";
 
-        @Override
-        public void run() {
-            while (running) {
-                try {
-                    InputStream inputStream = Client.getClient().clientSocket.getInputStream();
-                    if (inputStream.available() > 0) {
-                        ObjectInputStream ois = new ObjectInputStream(inputStream);
-                        Object obj = ois.readObject();
-                        log.info("Get a object from server.");
-                        com.humility.client.objectHandlers.ObjectHandler oh = actionMapping.get(obj.getClass());
-                        oh.handleObejct(obj, Client.getClient());
-                    }
+  //服务器各项服务的端口号
+  public static final int USERSERVICE_PORT = 50001;
+  public static final int GOODSERVICE_PORT = 50004;
+  public static final int TRANSACTIONSERVICE_PORT = 50002;
+  public static final int CHATSERVICE_PORT = 50003;
+  public static final int SERVER_PORT = 50000;
+
+  /**
+   * 简单的单例模式,私有的构造器防止外部创建client对象.
+   */
+  private Client() {
+    log.debug("Initializing...");
+    log.debug("Loading the userService.");
+    userService = (UserService) Client.getProxy(UserService.class, SERVER_IP, USERSERVICE_PORT);
+    log.debug("Success!");
+
+    log.debug("Loading the goodService.");
+    goodService = (GoodService) Client.getProxy(GoodService.class, SERVER_IP, GOODSERVICE_PORT);
+    log.debug("Success!");
+
+    log.debug("Loading the transactionService.");
+    transactionService = (TransactionService) Client.getProxy(TransactionService.class, SERVER_IP, TRANSACTIONSERVICE_PORT);
+    log.debug("Success!");
+
+    log.debug("Loading the chatService.");
+    chatService = (ChatService) Client.getProxy(ChatService.class, SERVER_IP, CHATSERVICE_PORT);
+    log.debug("Success!");
+
+    log.debug("Loading the objectHandlers...");
+    actionMapping.put(KeepAlive.class, new KeepAliveHandler());
+    log.debug("Initialize successful!");
+  }
+
+  /**
+   * 创建远程代理.
+   * @param clas  代理类型的接口.
+   * @param ip    远程服务器的ip地址.
+   * @param port  对应服务绑定的端口.
+   * @return 返回代理对象本身.(Object类型,需要自己down cast.)
+   */
+  private static Object getProxy(Class clas, String ip, int port) {
+    return Proxy.newProxyInstance(Client.class.getClassLoader(),
+            new Class[] {clas},
+            (Object proxy, Method method, Object[] args) -> {
+              Object ret = null;
+              Socket socket = null;
+              try {
+                socket = new Socket(ip, port);
+              } catch (IOException e) {
+                String info = "Invalid port num or ip address. Fail to get the socket connection.";
+                log.error(info);
+                //TODO 补上socket连接获取失败的处理逻辑.
+              }
+              String methodName = method.getName();
+              try (ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
+                oos.writeUTF(methodName);
+                oos.writeObject(method.getParameterTypes());
+                oos.writeObject(args);
+                try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())) {
+                  ret = ois.readObject();
                 } catch (IOException e) {
-                    log.error("There is something wrong with the internet connection." + " In the clientSocket.");
-                    Client.getClient().running = false;
-                    //TODO 网络连接异常的处理逻辑
-                } catch (ClassNotFoundException e) {
-                    log.error("Receive a unknown object." + " In the clientSocket.");
-                    //TODO 接口错误的处理逻辑.
+                  String info = "Fail to transform the data!" + " While invoking the method: " + methodName;
+                  log.error(info);
+                  //TODO 补上方法调用失败(或者是输出流没问题,输入流出了问题)的处理逻辑.
                 }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    log.error("InterruptedException!!");
-                }
-            }
-        }
-    }
+              } catch (IOException e) {
+                String info = "Fail to transform the data!" + " While invoking the method: " + methodName;
+                log.error(info);
+                //TODO io异常处理逻辑.
+              }
+              return ret;
+            });
+  }
 
-    //服务器的公网ip地址.
-    public static final String  SERVER_IP = "127.0.0.1";
+  /**
+   * 通过长连接向服务端发送对象的辅助方法.
+   * @param obj
+   * @throws IOException
+   */
+  private void sendObject(Object obj) throws IOException {
+    ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+    oos.writeObject(obj);
+    log.info("Send a object.");
+    oos.flush();
+  }
 
-    //服务器各项服务的端口号
-    public static final int USERSERVICE_PORT = 50001;
-    public static final int GOODSERVICE_PORT = 50004;
-    public static final int TRANSACTIONSERVICE_PORT = 50002;
-    public static final int CHATSERVICE_PORT = 50003;
-    public static final int SERVER_PORT = 50000;
+  //自己持有自己的唯一实例
+  private static Client client = null;
 
-    /**
-     * 简单的单例模式,私有的构造器防止外部创建client对象.
-     */
-    private Client() {
-        log.debug("Initializing...");
-        log.debug("Loading the userService.");
-        userService = (UserService) Client.getProxy(UserService.class, SERVER_IP, USERSERVICE_PORT);
-        log.debug("Success!");
+  //持有自己的心跳连接.
+  private Socket clientSocket = null;
 
-        log.debug("Loading the goodService.");
-        goodService = (GoodService) Client.getProxy(GoodService.class, SERVER_IP, GOODSERVICE_PORT);
-        log.debug("Success!");
+  //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
+  private Integer me = null;
+  private boolean running = false;
+  private long lastSendTime;
 
-        log.debug("Loading the transactionService.");
-        transactionService = (TransactionService) Client.getProxy(TransactionService.class, SERVER_IP, TRANSACTIONSERVICE_PORT);
-        log.debug("Success!");
+  //接受的对象和对应处理对象之间的映射.
+  private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
 
-        log.debug("Loading the chatService.");
-        chatService = (ChatService) Client.getProxy(ChatService.class, SERVER_IP, CHATSERVICE_PORT);
-        log.debug("Success!");
-
-        log.debug("Loading the objectHandlers...");
-        actionMapping.put(KeepAlive.class, new KeepAliveHandler());
-        log.debug("Initialize successful!");
-    }
-
-    /**
-     * 创建远程代理.
-     * @param clas  代理类型的接口.
-     * @param ip    远程服务器的ip地址.
-     * @param port  对应服务绑定的端口.
-     * @return 返回代理对象本身.(Object类型,需要自己down cast.)
-     */
-    private static Object getProxy(Class clas, String ip, int port) {
-        return Proxy.newProxyInstance(Client.class.getClassLoader(),
-                new Class[] {clas},
-                (Object proxy, Method method, Object[] args) -> {
-                    Object ret = null;
-                    Socket socket = null;
-                    try {
-                        socket = new Socket(ip, port);
-                    } catch (IOException e) {
-                        String info = "Invalid port num or ip address. Fail to get the socket connection.";
-                        log.error(info);
-                        //TODO 补上socket连接获取失败的处理逻辑.
-                    }
-                    String methodName = method.getName();
-                    try (ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
-                        oos.writeUTF(methodName);
-                        oos.writeObject(method.getParameterTypes());
-                        oos.writeObject(args);
-                        try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())) {
-                            ret = ois.readObject();
-                        } catch (IOException e) {
-                            String info = "Fail to transform the data!" + " While invoking the method: " + methodName;
-                            log.error(info);
-                            //TODO 补上方法调用失败(或者是输出流没问题,输入流出了问题)的处理逻辑.
-                        }
-                    } catch (IOException e) {
-                        String info = "Fail to transform the data!" + " While invoking the method: " + methodName;
-                        log.error(info);
-                        //TODO io异常处理逻辑.
-                    }
-                    return ret;
-                });
-    }
-
-    /**
-     * 通过长连接向服务端发送对象的辅助方法.
-     * @param obj
-     * @throws IOException
-     */
-    private void sendObject(Object obj) throws IOException {
-        ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-        oos.writeObject(obj);
-        log.info("Send a object.");
-        oos.flush();
-    }
-
-    //自己持有自己的唯一实例
-    private static Client client = null;
-
-    //持有自己的心跳连接.
-    private Socket clientSocket = null;
-
-    //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
-    private Integer me = null;
-    private boolean running = false;
-    private long lastSendTime;
-
-    //接受的对象和对应处理对象之间的映射.
-    private ConcurrentHashMap<Class, com.humility.client.objectHandlers.ObjectHandler> actionMapping = new ConcurrentHashMap<>();
-
-    //所有服务对象的代理.
-    private UserService userService;
-    private GoodService goodService;
-    private TransactionService transactionService;
-    private ChatService chatService;
+  //所有服务对象的代理.
+  private UserService userService;
+  private GoodService goodService;
+  private TransactionService transactionService;
+  private ChatService chatService;
 
 }

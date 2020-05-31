@@ -39,7 +39,7 @@ public class Login extends javax.swing.JFrame {
         login_button = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
+        setTitle("二手交易市场");
         username.setFont(new java.awt.Font("宋体", 1, 18)); // NOI18N
         username.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -154,6 +154,8 @@ public class Login extends javax.swing.JFrame {
             Client.getClient().setMe(user.getUser_id());
             Client.getClient().start();
             JOptionPane.showMessageDialog(this, "登录成功");
+            Main.main(null);
+            this.dispose();
         }
         return;
     }
