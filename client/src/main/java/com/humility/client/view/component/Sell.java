@@ -1,7 +1,5 @@
 package com.humility.client.view.component;
 
-import java.awt.*;
-
 /**
  * @author Humility <Yiling Yu>
  */
@@ -32,7 +30,6 @@ public class Sell extends javax.swing.JPanel {
     setPreferredSize(new java.awt.Dimension(956, 768));
     setBounds(0, 0, 956, 768);
     setOpaque(true);
-    setBackground(Color.white);
 
     statistic.setFont(new java.awt.Font("幼圆", 1, 18)); // NOI18N
     statistic.setText("销售数据统计");
@@ -104,7 +101,7 @@ public class Sell extends javax.swing.JPanel {
   }
 
   private void releaseActionPerformed(java.awt.event.ActionEvent evt) {
-    // TODO 发布商品
+    ReleaseGood.main(null);
   }
 
   // Variables declaration - do not modify

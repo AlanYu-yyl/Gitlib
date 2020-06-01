@@ -6,6 +6,7 @@ import com.humility.client.interfaces.TransactionService;
 import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
 import com.humility.client.view.Login;
+import com.humility.datas.Good;
 import com.humility.datas.KeepAlive;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

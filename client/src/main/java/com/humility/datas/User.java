@@ -10,11 +10,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements Serializable {
-    private Integer user_id;
+    private Integer uid;
     private String  username;
     private Integer password;
-    private String  realname;
-    private String  phoneNumber;
-    private String  emailAddress;
-    private String  qqAccount;
 }

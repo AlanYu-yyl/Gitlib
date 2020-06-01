@@ -1,7 +1,10 @@
 package com.humility.client.view.component;
 
+import com.humility.client.Client;
+import com.humility.datas.Good;
+
 import javax.swing.*;
-import java.awt.*;
+import java.util.List;
 
 /**
  * @author Humility <Yiling Yu>
@@ -32,11 +35,11 @@ public class Home extends javax.swing.JPanel {
     jLabel4 = new javax.swing.JLabel();
     jLabel5 = new javax.swing.JLabel();
     jLabel6 = new javax.swing.JLabel();
+    goodList = Client.getClient().getGoodService().getGoodsList();
 
     setPreferredSize(new java.awt.Dimension(956, 768));
     setBounds(0, 0, 956, 768);
     setOpaque(true);
-    setBackground(Color.white);
     search_icon.setIcon(new ImageIcon("E:\\java\\curriculum-design\\client\\src\\main\\resources\\search.png"));
 
     search_box.addActionListener(new java.awt.event.ActionListener() {
@@ -111,6 +114,7 @@ public class Home extends javax.swing.JPanel {
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JTextField search_box;
   private javax.swing.JLabel search_icon;
+  private List<Good> goodList;
   // End of variables declaration
 }
 

@@ -1,7 +1,7 @@
 package com.humility.server;
 
 import com.humility.datas.Account;
-import com.humility.datas.User;
+
 import static com.humility.server.Server.jdbcUtils;
 
 public class UserServiceImpl implements UserService {
@@ -15,11 +15,11 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override
-    public User login(Account account) {
-        User result = null;
-        result = jdbcUtils.queryUser(account);
+    public Integer login(Account account) {
+        Integer result = null;
+        result = jdbcUtils.queryUid(account);
         if (result != null) {
-            Server.getServer().setUserStatus(result.getUser_id(), Server.ClientStatus.Status.ONLINE);
+            Server.getServer().setUserStatus(result, Server.ClientStatus.Status.ONLINE);
         }
         return result;
     }
@@ -30,15 +30,13 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override
-    public Boolean register(User user) {
+    public Boolean register(Account account) {
         Boolean result = false;
-        int line = jdbcUtils.insertUserInfo(user);
-        if (line > 0)
+        int line = jdbcUtils.insertUser(account);
+        if (line > 0) {
             result = true;
-        String username = user.getUsername();
-        Integer password = user.getPassword();
-        User registeredUser = jdbcUtils.queryUser(new Account(username, password));
-        Server.getServer().addRegisteredUser(registeredUser.getUser_id());
+            Server.getServer().addRegisteredUser(jdbcUtils.queryUid(account));
+        }
         return result;
     }
 }

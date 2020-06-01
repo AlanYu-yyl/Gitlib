@@ -5,14 +5,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction implements Serializable {
-    private Integer transaction_id;
+    private Integer tid;
+    private Integer gid;
     private Integer buyer_id;
     private Integer seller_id;
-    private LocalDateTime time;
+    private String comment;
+    private BigDecimal tprice;
+    private LocalDateTime ttime;
 }

@@ -1,37 +1,39 @@
 package com.humility.utils;
 
 import com.humility.datas.Account;
+import com.humility.datas.Good;
 import com.humility.datas.User;
 import com.humility.server.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ArrayHandler;
 import org.apache.commons.dbutils.handlers.ArrayListHandler;
-import org.apache.commons.dbutils.handlers.ScalarHandler;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 
 @Slf4j
 public class JDBCUtils {
 
     /**
-     * 用于插入用户的详细信息 -- 在注册时调用.
-     * @param user
+     * 用于插入用户的信息 -- 在注册时调用.
+     * @param account
      * @return  int line 返回更新行数.
      */
-    public int insertUserInfo(User user) {
+    public int insertUser(Account account) {
         int line = 0;
         log.info("Inserting a user.");
-        String sql = "INSERT INTO users(username, password) VALUES (?, ?)";
-        String sqlInfo = "INSERT INTO users_info(realname, phoneNumber, emailAddress, qqAccount) VALUES (?, ?, ?, ?)";
-        Object[] params = {user.getUsername(), user.getPassword()};
-        Object[] paramsInfo = {user.getRealname(), user.getPhoneNumber(), user.getEmailAddress(), user.getQqAccount()};
+        String sql = "INSERT INTO user(username, password) VALUES (?, ?)";
+        Object[] params = {account.getUsername(), account.getPassword()};
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
             line = queryRunner.update(con, sql, params);
-            queryRunner.update(con, sqlInfo, paramsInfo);
         } catch (SQLException e) {
             log.error("数据库更新失败");
             //TODO 异常处理逻辑.
@@ -40,89 +42,57 @@ public class JDBCUtils {
     }
 
     /**
-     * 通过账号信息来查询对应的用户.
-     * @param account
-     * @return  返回的账号对应的用户
+     * 通过用户id来查询对应的用户.
+     * @param uid
+     * @return  返回uid对应的用户
      * @return null表示账号违法.
      */
-    public User queryUser(Account account) {
+    public User queryUser(int uid) {
         User ret = null;
-        String sql = "SELECT * FROM users WHERE username=? AND password=?";
-        Object[] objects = null;
+        String sql = "SELECT * FROM user WHERE uid=?";
+        Object[] res = null;
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            objects = queryRunner.query(con, sql, new ArrayHandler(), account.getUsername(), account.getPassword());
-            if (objects.length > 0) {
+            res = queryRunner.query(con, sql, new ArrayHandler(), uid);
+            if (res.length > 0) {
                 ret = new User();
-                ret.setUser_id((Integer) objects[0]);
-                ret.setUsername((String) objects[1]);
-                ret.setPassword((Integer) objects[2]);
+                ret.setUid((Integer) res[0]);
+                ret.setUsername((String) res[1]);
+                ret.setPassword((Integer) res[2]);
             }
         } catch (SQLException e) {
             log.error("数据库查询失败");
             //TODO 查询失败的处理逻辑.
         }
         if (ret == null)
-            log.info("Invalid account.");
+            log.info("Invalid uid.");
         else
-            log.info("Valid account.");
+            log.info("Valid uid.");
         return ret;
     }
 
     /**
-     * 插入用户发送的信息.
-     * @param message
-     * @param senderId
-     * @param getterId
-     * @return 返回消息id.
+     * 通过账号来查询对应的uid.
+     * @param account
+     * @return 返回账号对应的uid.
      */
-    public int insertMessage(String message, Integer senderId, Integer getterId) {
-        int messageId = 0;
-        String insert = "INSERT INTO messages(message_content, message_time, sender_id, getter_id) VALUES (?, ?, ?, ?)";
-        String query = "SELECT max(message_id) FROM messages";
-        Object[] insert_params = {message, new Timestamp(System.currentTimeMillis()), senderId, getterId};
-        try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            queryRunner.update(con, insert, insert_params);
-            messageId = queryRunner.query(con, query, new ScalarHandler<Integer>());
+    public int queryUid(Account account) {
+        int ret = -1;
+        String sql = "SELECT uid FROM user WHERE username=? AND password=?";
+        Object[] res = null;
+        try(Connection con = Server.getServer().getDataSource().getConnection()) {
+            res = queryRunner.query(con, sql, new ArrayHandler(), account.getUsername(), account.getPassword());
+            if (res.length > 0) {
+                ret = (int)res[0];
+            }
         } catch (SQLException e) {
-            log.error("Fail to insert the message!");
+            log.error("数据库查询失败");
+            //TODO 处理逻辑.
         }
-        return messageId;
-    }
-
-    /**
-     * 插入离线消息.
-     * @param messageId
-     * @param getterId
-     * @return
-     */
-    public int insertOffLineMessage(int messageId, Integer getterId) {
-        int line = 0;
-        String insert = "INSERT INTO offline_messages(message_id, getter_id) VALUE (?, ?)";
-        Object[] params = {messageId, getterId};
-        try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            line = queryRunner.update(con, insert, params);
-        } catch (SQLException e) {
-            log.error("Fail to insert the offline message!");
-        }
-        return line;
-    }
-
-    /**
-     * 查询某用户的离线消息.
-     * @param getterId
-     * @return
-     */
-    public List<Object[]> queryAllOffLineMessages(Integer getterId) {
-        String sql = "SELECT message_content, sender_id FROM offline_messages a inner join messages b on a.message_id=b.message_id WHERE a.getter_id=?";
-        Object[] param = {getterId};
-        List<Object[]> offLineMessages = null;
-        try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            offLineMessages = queryRunner.query(con, sql, new ArrayListHandler(), param);
-            this.deleteOffLineMessage(getterId);
-        } catch (SQLException e) {
-            log.error("Fail to get the offline messages of user " + getterId);
-        }
-        return offLineMessages;
+        if (ret == -1)
+            log.info("Invalid account.");
+        else
+            log.info("Valid account.");
+        return ret;
     }
 
     /**
@@ -131,7 +101,7 @@ public class JDBCUtils {
      * @throws RuntimeException
      */
     public List<Object[]> queryAllUsers() throws RuntimeException {
-        String sql = "SELECT user_id FROM users";
+        String sql = "SELECT uid FROM user";
         List<Object[]> userArray = null;
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
             userArray = queryRunner.query(con, sql, new ArrayListHandler());
@@ -143,54 +113,61 @@ public class JDBCUtils {
         return userArray;
     }
 
-    /**
-     * 通过账号信息来查询用户的详细信息.
-     * @param account
-     * @return User 如果为null则表示账号违法.
-     */
-    public User queryUserInfo(Account account) {
-        User ret = queryUserInfo(account);
-        String sql = "SELECT * FROM users inner join users_info on " +
-                "users.users_id=users_info.users_id WHERE users.users_id=?";
-        Object[] objects = null;
+    public int insertGood(Good good) {
+        int ret = 0;
+        String sql = "INSERT INTO good(gname, owner, price, image, description, is_selled)" +
+                "VALUES(?, ?, ?, ?, ?,?)";
+        byte[] imageBuffer = new byte[0];
+        try {
+            imageBuffer = getImageBuffer(good.getImage());
+        } catch (IOException e) {
+            log.info("图片-二进制转化失败");
+            //TODO 异常处理逻辑.
+        }
+        Object[] params = { good.getGname(), good.getOwner(), good.getPrice(),imageBuffer
+            , good.getDescription(), good.getIs_selled() };
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            objects = queryRunner.query(con, sql, new ArrayHandler(), ret.getUser_id());
-            if (objects.length > 0) {
-                if (objects[3] != null) {
-                    ret.setRealname((String) objects[3]);
-                }
-                if (objects[4] != null) {
-                    ret.setPhoneNumber((String) objects[4]);
-                }
-                if (objects[5] != null) {
-                    ret.setEmailAddress((String) objects[5]);
-                }
-                if (objects[6] != null) {
-                    ret.setQqAccount((String) objects[6]);
-                }
-            }
+            ret = queryRunner.update(con, sql, params);
+            log.info("商品注册成功");
         } catch (SQLException e) {
-            log.error("数据库查询失败");
-            //TODO 查询失败的处理逻辑.
+            log.info("商品注册失败");
+            //TODO 异常处理逻辑.
         }
         return ret;
     }
 
     /**
-     * 删除某用户的离线消息.
-     * @param userId
+     * 查询所有的good对象.
      * @return
      */
-    private int deleteOffLineMessage(Integer userId) {
-        int line = 0;
-        String sql = "DELETE FROM offline_messages WHERE getter_id=?";
-        Object[] param = {userId};
+    public List<Object[]> queryAllGoods() {
+        List<Object[]> ret = null;
+        String sql = "SELECT * FROM good WHERE is_selled=0";
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            line = queryRunner.update(con, sql, param);
-        } catch(SQLException e) {
-            log.error("Fail to delete the offLineMessage of user " + userId);
+            ret = queryRunner.query(con, sql, new ArrayListHandler());
+        } catch (SQLException e) {
+            log.info("查询失败");
+            //TODO 异常处理逻辑.
         }
-        return line;
+        return ret;
+    }
+
+    /**
+     * 将图片转换成二进制.
+     * @param imageIcon
+     * @return
+     */
+    private byte[] getImageBuffer(ImageIcon imageIcon) throws IOException {
+        Image image = imageIcon.getImage();
+        int width = image.getWidth(null);
+        int height = image.getHeight(null);
+        BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics g = bi.getGraphics();
+        g.drawImage(image, 0, 0, width, height, null);
+        g.dispose();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(bi, "png", byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
     }
 
     //用于封装数据库查询的对象.

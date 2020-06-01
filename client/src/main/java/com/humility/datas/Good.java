@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.swing.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -11,11 +12,11 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Good implements Serializable {
-    private Integer id;
-    private String name;
+    private Integer gid;
+    private String gname;
+    private Integer owner;
     private BigDecimal price;
-    private Integer goodNum;
+    private ImageIcon image;
     private String description;
-    private Integer ownerId;
-    private Integer transaction_id;
+    private Boolean is_selled;
 }

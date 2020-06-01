@@ -2,7 +2,7 @@ package com.humility.server;
 
 import com.humility.datas.Good;
 
-import java.util.stream.Stream;
+import java.util.ArrayList;
 
 /**
  * 处理商品相关业务的服务对象
@@ -25,12 +25,12 @@ public interface GoodService {
      * 通过检索.
      * @return
      */
-    public Stream<Good> getGoodsList(Integer userId);
+    public ArrayList<Good> getGoodsList();
 
     /**
      * 搜索信息,(可以考虑k最邻近法)
      * 检索信息之后通过请求者的id
      * @return
      */
-    public Stream<Good> searchGoods(Integer userId);
+    public ArrayList<Good> searchGoods(String name);
 }

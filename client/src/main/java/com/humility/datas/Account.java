@@ -6,10 +6,14 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * @author Humility <Yiling Yu>
+ */
+
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Account implements Serializable {
-    private String username;
-    private int password;
+  private String username;
+  private Integer password;
 }

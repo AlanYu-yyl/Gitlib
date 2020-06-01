@@ -1,7 +1,6 @@
 package com.humility.client.interfaces;
 
 import com.humility.datas.Account;
-import com.humility.datas.User;
 
 /**
  * 处理用户登录和注册的服务接口
@@ -20,7 +19,7 @@ public interface UserService {
      * @param account 将账号和密码封装进Account对象中传入.
      * @return User 返回结果为登录传入账号的用户,若返回NULL则表示账号或密码错误.
      */
-    public User login(Account account);
+    public Integer login(Account account);
 
     /**
      * 简单的注册请求
@@ -28,6 +27,6 @@ public interface UserService {
      * @param user 将用户的注册信息封装进User对象中传入.
      * @return 返回结果为注册请求的成功与否.
      */
-    public Boolean register(User user);
+    public Boolean register(Account account);
 
 }
