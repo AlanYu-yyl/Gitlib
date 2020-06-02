@@ -18,6 +18,6 @@ public class Message implements Serializable {
     private String message;
     private Integer sender_id;
     private Integer getter_id;
-    private long timeMillis;
+    private Long timeMillis;
     private Boolean is_received;
 }

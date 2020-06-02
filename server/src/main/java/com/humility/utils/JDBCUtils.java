@@ -190,13 +190,21 @@ public class JDBCUtils {
         return ret;
     }
 
-    public List<Object[]> queryAllMessages() {
+    public List<Object[]> queryAllMessages(int uid) {
         List<Object[]> ret = null;
-        String sql = "SELECT * FROM message";
+        String sql = "SELECT * FROM message WHERE sender_id=? OR getter_id=?";
+        Object[] params = { uid, uid };
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
-            ret = queryRunner.query(con, sql, new ArrayListHandler());
+            ret = queryRunner.query(con, sql, new ArrayListHandler(), params);
         } catch (SQLException e) {
             log.info("消息获取失败.");
+        }
+        sql = "UPDATE message SET is_received=1 WHERE getter_id=?";
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            int tmp = queryRunner.update(con, sql, uid);
+            log.debug("离线消息更新了" + tmp + "行");
+        } catch (SQLException e) {
+            log.info("jdbc:离线消息更新失败");
         }
         return ret;
     }
@@ -216,6 +224,19 @@ public class JDBCUtils {
         return ret;
     }
 
+    public int updateTransactionInfo(Transaction transaction) {
+        int ret = 0;
+        String sql = "UPDATE transaction SET tprice=? WHERE gid=? AND buyer_id=? AND seller_id=?";
+        Object[] params = {transaction.getTprice(), transaction.getGid(),
+                transaction.getBuyer_id(), transaction.getSeller_id()};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.update(con, sql, params);
+        } catch(SQLException e) {
+            log.info("交易价格确定失败.");
+        }
+        return ret;
+    }
+
     public int confirmTransaction(Transaction transaction) {
         int ret = 0;
         String sql = "UPDATE transaction SET tprice=?, is_selled=?";
@@ -224,6 +245,19 @@ public class JDBCUtils {
             ret = queryRunner.update(con, sql, params);
         } catch (SQLException e) {
             log.info("交易确认失败");
+        }
+        return ret;
+    }
+
+    public List<Object[]> queryCurrentTransaction(int uid) {
+        List<Object[]> ret = null;
+        String sql = "SELECT * FROM transaction WHERE is_selled=0 AND (seller_id=? OR buyer_id=?)";
+        Object[] params = {uid, uid};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.query(con, sql, new ArrayListHandler(), params);
+            log.debug(ret.toString());
+        } catch (SQLException e) {
+            log.info("jdbcUtils:当前交易查询失败");
         }
         return ret;
     }

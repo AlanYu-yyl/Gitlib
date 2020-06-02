@@ -2,6 +2,8 @@ package com.humility.server;
 
 import com.humility.datas.Transaction;
 
+import java.util.List;
+
 /**
  * 处理交易的服务接口
  * @author Humility <Yiling Yu>
@@ -25,5 +27,7 @@ public interface TransactionService {
     public void createTransaction(Transaction transaction);
 
     public void confirmTransaction(Transaction transaction);
+
+    public List<Transaction> getCurrentTransaction(Integer uid);
 }
 

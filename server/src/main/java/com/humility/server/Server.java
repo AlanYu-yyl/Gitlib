@@ -290,7 +290,7 @@ public class Server {
   private ExecutorService threadPool = null;
 
   //客户端状态映射
-  private Map<Integer, ClientStatus> clientStatusMap = new HashMap<>();
+  public Map<Integer, ClientStatus> clientStatusMap = new HashMap<>();
 
   //将接收到的对象映射到处理对象上.
   private ConcurrentHashMap<Class, ObjectHandler> actionMapping = new ConcurrentHashMap<>();

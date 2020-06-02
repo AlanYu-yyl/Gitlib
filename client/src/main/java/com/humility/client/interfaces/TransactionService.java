@@ -2,6 +2,8 @@ package com.humility.client.interfaces;
 
 import com.humility.datas.Transaction;
 
+import java.util.List;
+
 /**
  * 处理交易的服务接口
  * @author Humility <Yiling Yu>
@@ -23,6 +25,8 @@ public interface TransactionService {
 
     public void confirmTransaction(Transaction transaction);
 
+    public void confirmTransactionInfo(Transaction transaction);
+
     /**
      * 评价,由用户对商品进行评价.
      * 传入评价者id,商品id和评价信息.在该商品的评价区发布该评价.
@@ -32,5 +36,7 @@ public interface TransactionService {
      * @return 返回是否评价成功.
      */
     public Boolean makeComment(Integer userId, Integer goodId, String commentMessage);
+
+    public List<Transaction> getCurrentTransaction(Integer uid);
 }
 

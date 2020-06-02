@@ -34,7 +34,24 @@ public class ChatRoom extends javax.swing.JPanel {
     show_scroll = new javax.swing.JScrollPane();
     show_panel = new javax.swing.JLayeredPane();
 
-    setPreferredSize(new java.awt.Dimension(953, 680));
+    Client.getClient().getTransactionService().getCurrentTransaction(Client.getClient().getMe())
+            .forEach((Transaction transaction) -> getSession(transaction));
+    Client.getClient().getChatService().getAllMessages(Client.getClient().getMe())
+            .forEach((Message message) -> {
+              for (Session session : sessions) {
+                if (Client.getClient().getMe() == message.getGetter_id()) {
+                  if (session.other_id == message.getSender_id()) {
+                    session.messages.add(message);
+                  }
+                } else {
+                  if (session.other_id == message.getGetter_id()) {
+                    session.messages.add(message);
+                  }
+                }
+              }
+            });
+
+    setBounds(0, 0, 953, 680);
 
     session_scroll.setPreferredSize(new java.awt.Dimension(264, 768));
 
@@ -133,7 +150,7 @@ public class ChatRoom extends javax.swing.JPanel {
       String input_price = null;
       input_price = JOptionPane.showInputDialog("请输入最终报价(￥).");
       transaction.setTprice(new BigDecimal(input_price));
-      Client.getClient().getTransactionService().createTransaction(transaction);
+      Client.getClient().getTransactionService().confirmTransactionInfo(transaction);
     }
     else {
       JOptionPane.showMessageDialog(this, "请等候卖家确定价格.");
@@ -147,7 +164,10 @@ public class ChatRoom extends javax.swing.JPanel {
     input_area.setText("");
     message.setSender_id(Client.getClient().user.getUid());
     message.setGetter_id(currentSession.other_id);
+    message.setTimeMillis(System.currentTimeMillis());
     message.setIs_received(false);
+    currentSession.messages.add(message);
+    currentSession.refreshPanel();
     Client.getClient().getChatService().sendMessage(message);
   }
 

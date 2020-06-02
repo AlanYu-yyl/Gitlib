@@ -17,7 +17,7 @@ public interface ChatService {
      * @param userId 接受者的用户id用于map到对应的socket上
      * @return 返回一个离线消息的线性表.
      */
-    public List<Message> getOffLineMessages(Integer userId);
+    public List<Message> getAllMessages(Integer uid);
 
     /**
      * 客户端发送信息的方法.

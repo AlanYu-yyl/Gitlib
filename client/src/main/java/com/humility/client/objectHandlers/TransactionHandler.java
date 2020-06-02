@@ -15,10 +15,7 @@ public class TransactionHandler implements ObjectHandler{
   @Override
   public void handleObejct(Object obj, Client client) {
     Transaction transaction = (Transaction) obj;
-    if (transaction.getTprice() == null) {
-      ChatRoom.getSession(transaction);
-    }
-    if (transaction.getTprice() != null) {
+    if (transaction.getTid() != null) {
       Good good = Client.getClient().getGoodService().searchGood(transaction.getGid());
       int result = JOptionPane.showConfirmDialog(ChatRoom.currentSession,
               good.getGname()+"的最终报价为"+transaction.getTprice(),
