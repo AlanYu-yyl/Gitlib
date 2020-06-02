@@ -1,8 +1,10 @@
 package com.humility.server;
 
 import com.humility.datas.KeepAlive;
+import com.humility.datas.Transaction;
 import com.humility.server.objectHandler.KeepAliveHandler;
 import com.humility.server.objectHandler.ObjectHandler;
+import com.humility.server.objectHandler.TransactionHandler;
 import com.humility.utils.JDBCUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -255,6 +257,7 @@ public class Server {
   private void addObjectHandler() {
     log.debug("Adding objectHandler...");
     actionMapping.put(KeepAlive.class, new KeepAliveHandler());
+    actionMapping.put(Transaction.class, new TransactionHandler());
     log.debug("Success!");
   }
 

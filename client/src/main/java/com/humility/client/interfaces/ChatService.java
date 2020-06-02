@@ -26,5 +26,5 @@ public interface ChatService {
      * @param getterId 消息的接受者id
      * @return 无返回值
      */
-    public void sendMessage(String message, Integer senderId, Integer getterId);
+    public void sendMessage(Message message);
 }

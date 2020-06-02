@@ -1,6 +1,7 @@
 package com.humility.server;
 
 import com.humility.datas.Account;
+import com.humility.datas.User;
 
 /**
  * 处理用户登录和注册的服务接口
@@ -28,5 +29,7 @@ public interface UserService {
      * @return 返回结果为注册请求的成功与否.
      */
     public Boolean register(Account account);
+
+    public User getUserByUid(Integer uid);
 
 }

@@ -148,6 +148,8 @@ public class Main extends javax.swing.JFrame {
     java.awt.EventQueue.invokeLater(new Runnable() {
       public void run() {
         new Main().setVisible(true);
+        chatRoom.setVisible(false);
+        sell.setVisible(false);
       }
     });
   }
@@ -157,8 +159,8 @@ public class Main extends javax.swing.JFrame {
   private javax.swing.JLabel home_label;
   private javax.swing.JLayeredPane layout_panel;
   private javax.swing.JLabel sell_label;
-  private Home home;
-  private ChatRoom chatRoom;
-  private Sell sell;
+  public static Home home;
+  public static ChatRoom chatRoom;
+  public static Sell sell;
   // End of variables declaration
 }

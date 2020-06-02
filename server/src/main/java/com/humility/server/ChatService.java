@@ -16,7 +16,7 @@ public interface ChatService {
      * 客户端用来接收离线信息的方法.
      * @param userId 接受者的用户id用于map到对应的socket上
      */
-    public List<Message> getOffLineMessages(Integer userId);
+    public List<Message> getAllMessages();
 
     /**
      * 客户端发送信息的方法.
@@ -25,5 +25,5 @@ public interface ChatService {
      * @param getterId 消息的接受者id
      * @return 无返回值
      */
-    public void sendMessage(String message, Integer senderId, Integer getterId);
+    public void sendMessage(Message message);
 }

@@ -5,9 +5,13 @@ import com.humility.client.interfaces.GoodService;
 import com.humility.client.interfaces.TransactionService;
 import com.humility.client.interfaces.UserService;
 import com.humility.client.objectHandlers.KeepAliveHandler;
+import com.humility.client.objectHandlers.MessageHandler;
+import com.humility.client.objectHandlers.TransactionHandler;
 import com.humility.client.view.Login;
-import com.humility.datas.Good;
 import com.humility.datas.KeepAlive;
+import com.humility.datas.Message;
+import com.humility.datas.Transaction;
+import com.humility.datas.User;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -17,7 +21,6 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.Socket;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -93,11 +96,11 @@ public class Client {
    * 各种属性的getter
    * @param me
    */
-  public void setMe(Integer me) {
+  public void setMe(int me) {
     this.me = me;
   }
 
-  public Integer getMe() {
+  public int getMe() {
     return me;
   }
 
@@ -194,6 +197,8 @@ public class Client {
   public static final int CHATSERVICE_PORT = 50003;
   public static final int SERVER_PORT = 50000;
 
+  public User user = null;
+
   /**
    * 简单的单例模式,私有的构造器防止外部创建client对象.
    */
@@ -217,6 +222,8 @@ public class Client {
 
     log.debug("Loading the objectHandlers...");
     actionMapping.put(KeepAlive.class, new KeepAliveHandler());
+    actionMapping.put(Message.class, new MessageHandler());
+    actionMapping.put(Transaction.class, new TransactionHandler());
     log.debug("Initialize successful!");
   }
 
@@ -266,7 +273,7 @@ public class Client {
    * @param obj
    * @throws IOException
    */
-  private void sendObject(Object obj) throws IOException {
+  public void sendObject(Object obj) throws IOException {
     ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
     oos.writeObject(obj);
     log.info("Send a object.");
@@ -280,7 +287,7 @@ public class Client {
   private Socket clientSocket = null;
 
   //客户端状态. 包括登录的用户,运行状态,以及上次心跳的时间.
-  private Integer me = null;
+  private int me = -1;
   private boolean running = false;
   private long lastSendTime;
 

@@ -2,9 +2,6 @@ package com.humility.client.interfaces;
 
 import com.humility.datas.Transaction;
 
-import java.math.BigDecimal;
-import java.util.stream.Stream;
-
 /**
  * 处理交易的服务接口
  * @author Humility <Yiling Yu>
@@ -22,7 +19,9 @@ public interface TransactionService {
      * @param goodId            交易的商品id
      * @return  返回这个交易创建的结果.
      */
-    public Boolean createTransaction(Integer buyerId, Integer goodId);
+    public void createTransaction(Transaction transaction);
+
+    public void confirmTransaction(Transaction transaction);
 
     /**
      * 评价,由用户对商品进行评价.
@@ -33,21 +32,5 @@ public interface TransactionService {
      * @return 返回是否评价成功.
      */
     public Boolean makeComment(Integer userId, Integer goodId, String commentMessage);
-
-    /**
-     * 进行拍卖,由物品的拥有者发起.
-     * 发起拍卖之后还需要各个用户加价和最后的成交.
-     * @param goodId            商品id
-     * @param money             商品的起价
-     */
-    public Boolean auctionGood(Integer goodId, BigDecimal money);
-
-    /**
-     * 获取销售情况的数据.
-     * 通过传入的卖家id在数据库中检索所有的交易信息,然后用流的形式返回.
-     * @param userId            卖家的id.
-     * @return
-     */
-    public Stream<Transaction> getMySalesStatus(Integer userId);
 }
 

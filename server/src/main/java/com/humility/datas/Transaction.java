@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -18,5 +17,5 @@ public class Transaction implements Serializable {
     private Integer seller_id;
     private String comment;
     private BigDecimal tprice;
-    private LocalDateTime ttime;
+    private Long timeMillis;
 }

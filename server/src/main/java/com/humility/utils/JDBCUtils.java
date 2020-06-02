@@ -1,8 +1,6 @@
 package com.humility.utils;
 
-import com.humility.datas.Account;
-import com.humility.datas.Good;
-import com.humility.datas.User;
+import com.humility.datas.*;
 import com.humility.server.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
@@ -15,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -136,6 +135,19 @@ public class JDBCUtils {
         return ret;
     }
 
+    public List<Object[]> queryGood(int gid) {
+        List<Object[]> ret = null;
+        String sql = "SELECT * FROM good WHERE gid=?";
+        Object[] params = {(Integer) gid};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.query(con, sql, new ArrayListHandler(), params);
+        } catch (SQLException e) {
+            log.info("商品查询失败");
+            //TODO 异常处理逻辑.
+        }
+        return ret;
+    }
+
     /**
      * 查询所有的good对象.
      * @return
@@ -148,6 +160,70 @@ public class JDBCUtils {
         } catch (SQLException e) {
             log.info("查询失败");
             //TODO 异常处理逻辑.
+        }
+        return ret;
+    }
+
+    public int insertMessage(Message message) {
+        int ret = 0;
+        String sql = "INSERT INTO message(message, sender_id, getter_id, mtime, is_received)" +
+                "VALUES(?, ?, ?, ?, ?)";
+        Object[] params = {message.getMessage(), message.getSender_id(), message.getGetter_id(), System.currentTimeMillis(), false};
+        try(Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.update(con, sql, params);
+        } catch (SQLException e) {
+            log.info("消息插入失败, 请检查日期格式.");
+            //TODO 异常处理逻辑.
+        }
+        return ret;
+    }
+
+    public int receivedMessage(Message message) {
+        int ret = 0;
+        String sql = "UPDATE message SET is_received 1 WHERE message=? AND sender_id=? AND getter_id=?";
+        Object[] params = { message.getMessage(), message.getSender_id(), message.getGetter_id() };
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.update(con, sql, params);
+        } catch (SQLException e) {
+            log.info("信息状态更改失败.");
+        }
+        return ret;
+    }
+
+    public List<Object[]> queryAllMessages() {
+        List<Object[]> ret = null;
+        String sql = "SELECT * FROM message";
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.query(con, sql, new ArrayListHandler());
+        } catch (SQLException e) {
+            log.info("消息获取失败.");
+        }
+        return ret;
+    }
+
+    public int insertTransaction(Transaction transaction) {
+        int ret = 0;
+        String sql = "INSERT INTO transaction(gid, buyer_id, seller_id," +
+                "tprice, ttime, is_selled) VALUES(?, ?, ?, ?, ?, ?)";
+        Object[] params = {transaction.getGid(), transaction.getBuyer_id(),
+        transaction.getSeller_id(), (BigDecimal) queryGood(transaction.getGid()).get(0)[3],
+        transaction.getTimeMillis(), false};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.update(con, sql, params);
+        } catch(SQLException e) {
+            log.info("交易插入失败");
+        }
+        return ret;
+    }
+
+    public int confirmTransaction(Transaction transaction) {
+        int ret = 0;
+        String sql = "UPDATE transaction SET tprice=?, is_selled=?";
+        Object[] params = {transaction.getTprice(), true};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            ret = queryRunner.update(con, sql, params);
+        } catch (SQLException e) {
+            log.info("交易确认失败");
         }
         return ret;
     }

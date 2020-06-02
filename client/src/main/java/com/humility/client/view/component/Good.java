@@ -1,5 +1,11 @@
 package com.humility.client.view.component;
 
+import com.humility.client.Client;
+import com.humility.client.view.Main;
+import com.humility.datas.Transaction;
+
+import java.io.IOException;
+
 /**
  * @author Humility <Yiling Yu>
  */
@@ -9,8 +15,8 @@ public class Good extends javax.swing.JPanel {
   /**
    * Creates new form Good
    */
-  public Good() {
-    initComponents();
+  public Good(com.humility.datas.Good good) {
+    initComponents(good);
   }
 
   /**
@@ -20,41 +26,43 @@ public class Good extends javax.swing.JPanel {
    */
   @SuppressWarnings("unchecked")
   // <editor-fold defaultstate="collapsed" desc="Generated Code">
-  private void initComponents() {
+  private void initComponents(com.humility.datas.Good good) {
 
-    jLabel2 = new javax.swing.JLabel();
     picture = new javax.swing.JLabel();
     name = new javax.swing.JLabel();
     price = new javax.swing.JLabel();
-    description = new javax.swing.JLabel();
+    jScrollPane1 = new javax.swing.JScrollPane();
+    description = new javax.swing.JTextPane();
     i_wanna = new javax.swing.JButton();
 
-    jLabel2.setText("jLabel2");
+    this.good = good;
+
+    picture.setIcon(good.getImage());
+    name.setText(good.getGname());
+    price.setText(good.getPrice().toString() + "￥");
+    description.setText(good.getDescription());
 
     setMaximumSize(new java.awt.Dimension(183, 230));
     setMinimumSize(new java.awt.Dimension(183, 230));
-    setName(""); // NOI18N
     setPreferredSize(new java.awt.Dimension(183, 230));
 
     picture.setPreferredSize(new java.awt.Dimension(183, 100));
 
-    name.setFont(new java.awt.Font("幼圆", 0, 14)); // NOI18N
-    name.setText("name");
+    name.setFont(new java.awt.Font("幼圆", 1, 18)); // NOI18N
+    name.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
     price.setFont(new java.awt.Font("幼圆", 0, 14)); // NOI18N
-    price.setText("price");
+    price.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
-    description.setFont(new java.awt.Font("幼圆", 0, 14)); // NOI18N
-    description.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-    description.setText("jLabel7");
-    description.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-
-    i_wanna.setText("i_wanna");
+    i_wanna.setFont(new java.awt.Font("幼圆", 1, 18)); // NOI18N
+    i_wanna.setText("Wanna");
     i_wanna.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         i_wannaActionPerformed(evt);
       }
     });
+
+    jScrollPane1.setViewportView(description);
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
@@ -65,9 +73,9 @@ public class Good extends javax.swing.JPanel {
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(price, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(i_wanna, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(description, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGap(21, 21, 21)
+                            .addComponent(i_wanna, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane1)
     );
     layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
@@ -76,27 +84,37 @@ public class Good extends javax.swing.JPanel {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(layout.createSequentialGroup()
-                                            .addComponent(name, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(name, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(price, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addComponent(price))
                                     .addComponent(i_wanna, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(description, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE))
     );
   }// </editor-fold>
 
   private void i_wannaActionPerformed(java.awt.event.ActionEvent evt) {
-    // TODO add your handling code here:
+    ChatRoom.createSession(this.good);
+    try {
+      Client.getClient().sendObject(new Transaction(null, good.getGid(), Client.getClient().getMe(),
+              good.getOwner(), null, good.getPrice(), System.currentTimeMillis()));
+    } catch (IOException e) {
+      System.out.println("*******交易类发送失败*********");
+    }
+    Main.sell.setVisible(false);
+    Main.home.setVisible(false);
+    Main.chatRoom.setVisible(true);
   }
 
 
   // Variables declaration - do not modify
-  private javax.swing.JLabel description;
+  private javax.swing.JScrollPane jScrollPane1;
+  private javax.swing.JTextPane description;
   private javax.swing.JButton i_wanna;
-  private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel name;
   private javax.swing.JLabel picture;
   private javax.swing.JLabel price;
+  private com.humility.datas.Good good;
   // End of variables declaration
 }
 

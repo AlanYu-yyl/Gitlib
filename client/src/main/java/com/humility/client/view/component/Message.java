@@ -1,5 +1,9 @@
 package com.humility.client.view.component;
 
+import com.humility.client.Client;
+
+import java.text.SimpleDateFormat;
+
 /**
  * @author Humility <Yiling Yu>
  */
@@ -8,8 +12,8 @@ public class Message extends javax.swing.JPanel {
   /**
    * Creates new form Message
    */
-  public Message() {
-    initComponents();
+  public Message(com.humility.datas.Message message) {
+    initComponents(message);
   }
 
   /**
@@ -19,29 +23,34 @@ public class Message extends javax.swing.JPanel {
    */
   @SuppressWarnings("unchecked")
   // <editor-fold defaultstate="collapsed" desc="Generated Code">
-  private void initComponents() {
+  private void initComponents(com.humility.datas.Message msg) {
 
-    profile = new javax.swing.JLabel();
+    username = new javax.swing.JLabel();
     time = new javax.swing.JLabel();
     message = new javax.swing.JLabel();
 
     setPreferredSize(new java.awt.Dimension(612, 96));
 
+    username.setFont(new java.awt.Font("幼圆", 1, 18)); // NOI18N
+    username.setText(Client.getClient().getUserService().getUserByUid(msg.getSender_id()).getUsername());
+    username.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
     time.setFont(new java.awt.Font("幼圆", 0, 14)); // NOI18N
     time.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-    time.setText("2020-5-31 15时40分");
+    time.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(msg.getTimeMillis()));
 
     message.setFont(new java.awt.Font("幼圆", 0, 18)); // NOI18N
-    message.setText("This is the true message.");
+    message.setText(msg.getMessage());
+    message.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                            .addComponent(profile, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(username, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(message, javax.swing.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE)
+                            .addComponent(message, javax.swing.GroupLayout.DEFAULT_SIZE, 528, Short.MAX_VALUE)
                             .addContainerGap())
                     .addComponent(time, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
     );
@@ -52,7 +61,7 @@ public class Message extends javax.swing.JPanel {
                             .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(profile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(username, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(message, javax.swing.GroupLayout.DEFAULT_SIZE, 65, Short.MAX_VALUE))
                             .addGap(16, 16, 16))
     );
@@ -61,7 +70,7 @@ public class Message extends javax.swing.JPanel {
 
   // Variables declaration - do not modify
   private javax.swing.JLabel message;
-  private javax.swing.JLabel profile;
+  private javax.swing.JLabel username;
   private javax.swing.JLabel time;
   // End of variables declaration
 }

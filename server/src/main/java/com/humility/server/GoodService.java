@@ -33,4 +33,7 @@ public interface GoodService {
      * @return
      */
     public ArrayList<Good> searchGoods(String name);
+
+    public Good searchGood(int gid);
+
 }

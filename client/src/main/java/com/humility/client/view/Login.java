@@ -3,6 +3,7 @@ package com.humility.client.view;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.humility.client.Client;
 import com.humility.datas.Account;
+import com.humility.datas.User;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -144,13 +145,15 @@ public class Login extends javax.swing.JFrame {
     }
 
     private void login_buttonActionPerformed(java.awt.event.ActionEvent evt) {
-        Integer uid = Client.getClient().getUserService().login(new Account(username.getText(), new String(password.getPassword()).hashCode()));
+        Account account = new Account(username.getText(), new String(password.getPassword()).hashCode());
+        Integer uid = Client.getClient().getUserService().login(account);
         password.setText("");
         if (uid == null) {
             log.info("登录失败");
             JOptionPane.showMessageDialog(this, "用户名或密码错误,请重新输入.");
         } else {
             Client.getClient().setMe(uid);
+            Client.getClient().user = new User(uid, account.getUsername(), account.getPassword());
             Client.getClient().start();
             JOptionPane.showMessageDialog(this, "登录成功");
             Main.main(null);

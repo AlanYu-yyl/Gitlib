@@ -29,14 +29,18 @@ public class GoodServiceImpl implements GoodService {
     public ArrayList<Good> getGoodsList() {
         ArrayList<Good> ret = new ArrayList<Good>();
         List<Object[]> goodList = Server.jdbcUtils.queryAllGoods();
-        goodList.forEach((objects) -> {
-
-        });
+        goodList.forEach((Object[] objects) -> ret.add(resolveGood(objects)));
+        return ret;
     }
 
     @Override
     public ArrayList<Good> searchGoods(String name) {
         return null;
+    }
+
+    @Override
+    public Good searchGood(int gid) {
+        return resolveGood(Server.jdbcUtils.queryGood(gid).get(0));
     }
 
     /**

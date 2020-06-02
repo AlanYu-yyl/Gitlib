@@ -3,6 +3,7 @@ package com.humility.client.view.component;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.humility.client.Client;
 import com.humility.client.view.Login;
+import com.humility.client.view.Main;
 import com.humility.datas.Good;
 
 import javax.swing.*;
@@ -44,7 +45,7 @@ public class ReleaseGood extends javax.swing.JDialog {
     sp_bt = new javax.swing.JButton();
     confirm_bt = new javax.swing.JButton();
 
-    setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+    setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     setLocation(500, 200);
 
     title_label.setFont(new java.awt.Font("幼圆", 1, 24)); // NOI18N
@@ -166,7 +167,11 @@ public class ReleaseGood extends javax.swing.JDialog {
     Boolean flag = Client.getClient().getGoodService().releaseGood(good);
     if (flag == null)
       JOptionPane.showMessageDialog(this, "服务请求失败,请检查网络连接.");
-    if (flag) this.dispose();
+    if (flag) {
+      JOptionPane.showMessageDialog(this, "商品发布成功!");
+      this.dispose();
+      Main.home.getGoodsView();
+    }
     else {
       JOptionPane.showMessageDialog(this, "商品发布失败, 请完善商品信息。");
     }

@@ -1,6 +1,7 @@
 package com.humility.server;
 
 import com.humility.datas.Account;
+import com.humility.datas.User;
 
 import static com.humility.server.Server.jdbcUtils;
 
@@ -26,7 +27,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 用户注册
-     * @param user 将用户的注册信息封装进User对象中传入.
+     * @param account 将用户的注册信息封装进User对象中传入.
      * @return
      */
     @Override
@@ -38,5 +39,10 @@ public class UserServiceImpl implements UserService {
             Server.getServer().addRegisteredUser(jdbcUtils.queryUid(account));
         }
         return result;
+    }
+
+    @Override
+    public User getUserByUid(Integer uid) {
+        return jdbcUtils.queryUser(uid);
     }
 }
