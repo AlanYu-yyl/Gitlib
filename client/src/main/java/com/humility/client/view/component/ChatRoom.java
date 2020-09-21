@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static javax.swing.JOptionPane.showInputDialog;
+
 /**
  * @author Humility <Yiling Yu>
  */
@@ -141,19 +143,21 @@ public class ChatRoom extends javax.swing.JPanel {
   }// </editor-fold>
 
   private void deal_btActionPerformed(java.awt.event.ActionEvent evt) {
+    Transaction transaction = new Transaction();
+    transaction.setGid(currentSession.good.getGid());
+    transaction.setBuyer_id(currentSession.getBuyer_id());
+    transaction.setSeller_id(currentSession.good.getOwner());
     if (Client.getClient().getMe() == currentSession.good.getOwner()) {
-      Transaction transaction = new Transaction();
-      transaction.setGid(currentSession.good.getGid());
-      transaction.setBuyer_id(currentSession.other_id);
-      transaction.setSeller_id(Client.getClient().getMe());
-      transaction.setTimeMillis(System.currentTimeMillis());
       String input_price = null;
-      input_price = JOptionPane.showInputDialog("请输入最终报价(￥).");
+      input_price = showInputDialog("请输入最终报价(￥).");
       transaction.setTprice(new BigDecimal(input_price));
       Client.getClient().getTransactionService().confirmTransactionInfo(transaction);
     }
     else {
-      JOptionPane.showMessageDialog(this, "请等候卖家确定价格.");
+      Client.getClient().getTransactionService().confirmTransaction(transaction);
+      String input = JOptionPane.showInputDialog("交易确认. 请对此次交易做出评价.");
+      transaction.setComment(input);
+      Client.getClient().getTransactionService().makeComment(transaction);
     }
   }
 
@@ -167,8 +171,8 @@ public class ChatRoom extends javax.swing.JPanel {
     message.setTimeMillis(System.currentTimeMillis());
     message.setIs_received(false);
     currentSession.messages.add(message);
-    currentSession.refreshPanel();
     Client.getClient().getChatService().sendMessage(message);
+    currentSession.refreshPanel();
   }
 
   public static void createSession(Good good) {
@@ -186,6 +190,8 @@ public class ChatRoom extends javax.swing.JPanel {
     paintSessionPanel();
     getFocus(session);
     currentSession = session;
+    getFocus(currentSession);
+    currentSession.refreshPanel();
   }
 
   public static void paintSessionPanel() {

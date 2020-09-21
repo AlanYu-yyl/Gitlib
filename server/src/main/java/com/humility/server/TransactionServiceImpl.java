@@ -13,8 +13,9 @@ public class TransactionServiceImpl implements TransactionService {
     public static final int PORT = 50002;
 
     @Override
-    public Boolean makeComment(Integer userId, Integer goodId, String commentMessage) {
-        return null;
+    public Boolean makeComment(Transaction transaction) {
+        Server.jdbcUtils.makeComment(transaction);
+        return true;
     }
 
     @Override

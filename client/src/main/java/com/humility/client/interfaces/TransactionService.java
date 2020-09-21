@@ -35,7 +35,7 @@ public interface TransactionService {
      * @param commentMessage    评价信息
      * @return 返回是否评价成功.
      */
-    public Boolean makeComment(Integer userId, Integer goodId, String commentMessage);
+    public Boolean makeComment(Transaction transaction);
 
     public List<Transaction> getCurrentTransaction(Integer uid);
 }

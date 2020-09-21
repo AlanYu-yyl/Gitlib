@@ -220,7 +220,7 @@ public class Server {
    * @param service   服务对象.
    * @param port      绑定的端口号.
    */
-  private void register(@NotNull Object service, int port) {
+  private void register(@NotNull Object service, int port)  {
     String serverName = service.getClass().getName();
     log.debug("Registering the " + serverName);
     try {

@@ -239,8 +239,8 @@ public class JDBCUtils {
 
     public int confirmTransaction(Transaction transaction) {
         int ret = 0;
-        String sql = "UPDATE transaction SET tprice=?, is_selled=?";
-        Object[] params = {transaction.getTprice(), true};
+        String sql = "UPDATE transaction SET is_selled=1 WHERE gid=? AND  buyer_id=? AND seller_id=?";
+        Object[] params = {transaction.getGid(), transaction.getBuyer_id(), transaction.getSeller_id()};
         try (Connection con = Server.getServer().getDataSource().getConnection()) {
             ret = queryRunner.update(con, sql, params);
         } catch (SQLException e) {
@@ -260,6 +260,16 @@ public class JDBCUtils {
             log.info("jdbcUtils:当前交易查询失败");
         }
         return ret;
+    }
+
+    public void makeComment(Transaction transaction) {
+        String sql = "UPDATE transaction SET comment=? WHERE gid=? AND buyer_id=? AND seller_id=?";
+        Object[] params = {transaction.getComment(), transaction.getGid(), transaction.getBuyer_id(), transaction.getSeller_id()};
+        try (Connection con = Server.getServer().getDataSource().getConnection()) {
+            queryRunner.update(con, sql, params);
+        } catch (SQLException e) {
+            log.info("评论失败");
+        }
     }
 
     /**

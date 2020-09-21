@@ -32,7 +32,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private Message resolveMessage(Object[] objs) {
-        Message ret = null;
+        Message ret = new Message();
         ret.setMessage((String) objs[1]);
         ret.setSender_id((Integer) objs[2]);
         ret.setGetter_id(((Integer) objs[3]));
